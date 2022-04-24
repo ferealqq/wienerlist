@@ -1,0 +1,10 @@
+package seeders
+
+import (
+	"gorm.io/gorm"
+)
+
+type Seed struct {
+	Name string
+	Run  func(*gorm.DB) *gorm.DB
+}

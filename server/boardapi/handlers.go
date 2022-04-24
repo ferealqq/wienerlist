@@ -38,8 +38,19 @@ func HealthcheckHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 
 func ListBoardsHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 	var boards []models.Board
-	// TODO Error handling
-	appEnv.DBConn.Find(&boards)
+	result := appEnv.DBConn.Find(&boards)
+	if result.Error != nil {
+		response := status.Response{
+			Status:  strconv.Itoa(http.StatusInternalServerError),
+			Message: "Error fetching boards",
+		}
+		log.WithFields(log.Fields{
+			"env":    appEnv.Env,
+			"status": http.StatusInternalServerError,
+		}).Error("Error fetching boards")
+		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
+		return
+	}
 	responseObject := make(map[string]interface{})
 	responseObject["boards"] = boards
 	responseObject["count"] = len(boards)
@@ -78,6 +89,7 @@ func CreateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 			"error": result.Error,
 		}).Error("error creating board")
 		appEnv.Render.JSON(w, http.StatusCreated, response)
+		return
 	}
 
 	appEnv.Render.JSON(w, http.StatusCreated, board)
@@ -111,5 +123,35 @@ func UpdateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 
 // Delete a board from the board store
 func DeleteBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
-	// TODO implement
+	vars := mux.Vars(req)
+	bid, _ := strconv.Atoi(vars["bid"])
+	board := models.Board{}
+	result := appEnv.DBConn.Delete(&board, bid)
+	if result.Error != nil {
+		response := status.Response{
+			Status:  strconv.Itoa(http.StatusInternalServerError),
+			Message: "error deleting board",
+		}
+		log.WithFields(log.Fields{
+			"env":    appEnv.Env,
+			"status": http.StatusInternalServerError,
+			"error": result.Error,
+		}).Error("Error deleting board")
+		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
+		return
+	}
+	// If the board was not found and due to it not being found it couldn't be deleted
+	if result.RowsAffected == 0 {
+		response := status.Response{
+			Status:  strconv.Itoa(http.StatusNotFound),
+			Message: "can't find board",
+		}
+		log.WithFields(log.Fields{
+			"env":    appEnv.Env,
+			"status": http.StatusNotFound,
+		}).Error("Can't find board")
+		appEnv.Render.JSON(w, http.StatusNotFound, response)
+		return
+	}
+	appEnv.Render.JSON(w, http.StatusOK, board)
 }

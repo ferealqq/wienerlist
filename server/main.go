@@ -57,7 +57,11 @@ func main() {
 	// Initialise data storage
 	// ===========================================================================
 	database.InitDB()
-	migrations.Migrate()
+	if env == LOCAL{
+		migrations.MigrateSeedAfterwards(database.DBConn)
+	}else{
+		migrations.Migrate(database.DBConn)
+	}
 	// ===========================================================================
 	// Initialise application context
 	// ===========================================================================
