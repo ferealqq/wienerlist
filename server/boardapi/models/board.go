@@ -2,14 +2,17 @@ package models
 
 import (
 	"fmt"
+	"time"
 )
 
-type Board struct { 
-	ID int `json:"id"`
-	Title string `json:"title"`
-	Description string `json:"Description"`
+// Database model for board
+type Board struct {
+	ID uint `gorm:"primary_key"`
+	Title string
+	Description string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
-
 
 // GoString implements the GoStringer interface so we can display the full struct during debugging
 // usage: fmt.Printf("%#v", i)
@@ -25,12 +28,4 @@ func (b *Board) GoString() string {
 		b.Title,
 		b.Description,
 	)
-}
-
-type BoardStorage interface {
-	ListBoards() ([]Board, error)
-	AddBoard(b Board) (Board, error)
-	GetBoard(i int) (Board, error)
-	UpdateBoard(b Board) (Board, error)
-	DeleteBoard(i int) error
 }

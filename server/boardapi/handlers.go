@@ -37,22 +37,12 @@ func HealthcheckHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 }
 
 func ListBoardsHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
-	list, err := appEnv.BoardStore.ListBoards()
-	if err != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusNotFound),
-			Message: "can't find any boards",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusNotFound,
-		}).Error("Can't find any boards")
-		appEnv.Render.JSON(w, http.StatusNotFound, response)
-		return
-	}
+	var boards []models.Board
+	// TODO Error handling
+	appEnv.DBConn.Find(&boards)
 	responseObject := make(map[string]interface{})
-	responseObject["boards"] = list
-	responseObject["count"] = len(list)
+	responseObject["boards"] = boards
+	responseObject["count"] = len(boards)
 	appEnv.Render.JSON(w, http.StatusOK, responseObject)
 }
 
@@ -73,11 +63,23 @@ func CreateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 		return
 	}
 	board := models.Board{
-		ID:       	 -1,
 		Title: 		 b.Title,
 		Description: b.Description,
 	}
-	board, _ = appEnv.BoardStore.AddBoard(board)
+	result := appEnv.DBConn.Create(&board)
+	if result.Error != nil {
+		response := status.Response{
+			Status:  strconv.Itoa(http.StatusInternalServerError),
+			Message: "error creating board",
+		}
+		log.WithFields(log.Fields{
+			"env":    appEnv.Env,
+			"status": http.StatusInternalServerError,
+			"error": result.Error,
+		}).Error("error creating board")
+		appEnv.Render.JSON(w, http.StatusCreated, response)
+	}
+
 	appEnv.Render.JSON(w, http.StatusCreated, board)
 }
 
@@ -85,8 +87,9 @@ func CreateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 func GetBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 	vars := mux.Vars(req)
 	bid, _ := strconv.Atoi(vars["bid"])
-	board, err := appEnv.BoardStore.GetBoard(bid)
-	if err != nil {
+	board := models.Board{}
+	result := appEnv.DBConn.First(&board, bid)
+	if result.Error != nil {
 		response := status.Response{
 			Status:  strconv.Itoa(http.StatusNotFound),
 			Message: "can't find board",
@@ -103,60 +106,10 @@ func GetBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 
 // Update a board in the board store
 func UpdateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
-	vars := mux.Vars(req)
-	bid, _ := strconv.Atoi(vars["bid"])
-	decoder := json.NewDecoder(req.Body)
-	var b models.Board
-	err := decoder.Decode(&b)
-	if err != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusBadRequest),
-			Message: "malformed board object",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusBadRequest,
-		}).Error("malformed board object")
-		appEnv.Render.JSON(w, http.StatusBadRequest, response)
-		return
-	}
-	board := models.Board{
-		ID:       	 bid,
-		Title: 		 b.Title,
-		Description: b.Description,
-	}
-	board, err = appEnv.BoardStore.UpdateBoard(board)
-	if err != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusInternalServerError),
-			Message: "something went wrong",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusInternalServerError,
-		}).Error("something went wrong")
-		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
-		return
-	}
-	appEnv.Render.JSON(w, http.StatusOK, board)
+	// TODO implement
 }
 
 // Delete a board from the board store
 func DeleteBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
-	vars := mux.Vars(req)
-	bid, _ := strconv.Atoi(vars["bid"])
-	err := appEnv.BoardStore.DeleteBoard(bid)
-	if err != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusInternalServerError),
-			Message: "something went wrong",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusInternalServerError,
-		}).Error("something went wrong")
-		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
-		return
-	}
-	appEnv.Render.Text(w, http.StatusNoContent, "")
+	// TODO implement
 }

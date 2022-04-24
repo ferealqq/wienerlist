@@ -6,4 +6,4 @@ fresh:
 	ENV=LOCAL \
 	PORT=3000 \
 	VERSION=VERSION \
-	fresh
+	fresh -c ./cmd/runner.conf

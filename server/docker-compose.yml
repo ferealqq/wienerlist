@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  board_db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=BOARD
+    ports:
+      - '5432:5432'
+  test_db: 
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=TEST_BOARD
+    ports:
+      - '5433:5432'
