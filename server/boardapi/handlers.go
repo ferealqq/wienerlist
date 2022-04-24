@@ -109,6 +109,7 @@ func GetBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 		log.WithFields(log.Fields{
 			"env":    appEnv.Env,
 			"status": http.StatusNotFound,
+			"error":  result.Error,
 		}).Error("Can't find board")
 		appEnv.Render.JSON(w, http.StatusNotFound, response)
 		return
@@ -118,7 +119,45 @@ func GetBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 
 // Update a board in the board store
 func UpdateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
-	// TODO implement
+	vars := mux.Vars(req)
+	bid, _ := strconv.Atoi(vars["bid"])
+	decoder := json.NewDecoder(req.Body)
+	var b models.Board
+	err := decoder.Decode(&b)
+	if err != nil {
+		response := status.Response{
+			Status:  strconv.Itoa(http.StatusBadRequest),
+			Message: "malformed board object",
+		}
+		log.WithFields(log.Fields{
+			"env":    appEnv.Env,
+			"status": http.StatusBadRequest,
+		}).Error("malformed board object")
+		appEnv.Render.JSON(w, http.StatusBadRequest, response)
+		return
+	}
+
+	board := models.Board{
+		ID: 		 uint(bid),
+		Title: 		 b.Title,
+		Description: b.Description,
+	}
+
+	if err = appEnv.DBConn.Model(&board).Updates(&board).Error ; err != nil {
+		response := status.Response{
+			Status:  strconv.Itoa(http.StatusInternalServerError),
+			Message: "error updating board",
+		}
+		log.WithFields(log.Fields{
+			"env":    appEnv.Env,
+			"status": http.StatusInternalServerError,
+			"error":  err,
+		}).Error("error updating board")
+		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
+		return
+	}
+
+	appEnv.Render.JSON(w, http.StatusOK, board)
 }
 
 // Delete a board from the board store

@@ -9,7 +9,7 @@ import (
 
 
 func TestCreateBoard(t *testing.T) {
-	database.InitDB()
+	database.TestDBInit()
 
 	b := Board{
 		Title:       "This is a new test board",
@@ -21,10 +21,12 @@ func TestCreateBoard(t *testing.T) {
 		assert.Equal(t, "This is a new test board", b.Title, "they should be equal")
 		assert.Equal(t, "This is a board for app development", b.Description, "they should be equal")
 	}
+
+	defer database.Close()
 }
 
 func TestGetBoard(t *testing.T){
-	database.InitDB()
+	database.TestDBInit()
 
 	b := Board{
 		Title:       "This is a new test board",
@@ -40,4 +42,6 @@ func TestGetBoard(t *testing.T){
 	result = database.DBConn.First(&bo, 2)
 	assert.Nil(t, result.Error)
 	assert.NotNil(t, bo)
+
+	defer database.Close()
 }

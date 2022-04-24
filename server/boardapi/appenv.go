@@ -1,6 +1,8 @@
 package boardapi
 
 import (
+	"github.com/ferealqq/golang-trello-copy/server/migrations"
+	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
 	"github.com/unrolled/render"
 	"gorm.io/gorm"
 )
@@ -18,6 +20,8 @@ type AppEnv struct {
 // CreateContextForTestSetup initialises an application context struct
 // for testing purposes
 func CreateContextForTestSetup() AppEnv {
+	database.TestDBInit()
+	migrations.Migrate(database.DBConn)
 	testVersion := "0.0.0"
 	// TODO init test database connection
 	appEnv := AppEnv{
@@ -25,6 +29,7 @@ func CreateContextForTestSetup() AppEnv {
 		Version:   testVersion,
 		Env:       "LOCAL",
 		Port:      "3001",
+		DBConn:    database.DBConn,
 	}
 	return appEnv
 }
