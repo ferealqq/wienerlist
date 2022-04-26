@@ -2,12 +2,15 @@ package boardapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	models "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/health"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/status"
+
+	// . "github.com/ferealqq/golang-trello-copy/server/pkg/utils"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -38,21 +41,23 @@ func HealthcheckHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 
 func ListBoardsHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 	var boards []models.Board
-	result := appEnv.DBConn.Find(&boards)
+	result := appEnv.DBConn.Preload("Sections").Find(&boards)
 	if result.Error != nil {
 		response := status.Response{
 			Status:  strconv.Itoa(http.StatusInternalServerError),
 			Message: "Error fetching boards",
 		}
+		fmt.Println(result.Error)
 		log.WithFields(log.Fields{
 			"env":    appEnv.Env,
 			"status": http.StatusInternalServerError,
+			"error":  result.Error,
 		}).Error("Error fetching boards")
 		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
 		return
 	}
 	responseObject := make(map[string]interface{})
-	responseObject["boards"] = boards
+	responseObject["bords"] = boards
 	responseObject["count"] = len(boards)
 	appEnv.Render.JSON(w, http.StatusOK, responseObject)
 }
@@ -100,7 +105,7 @@ func GetBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 	vars := mux.Vars(req)
 	bid, _ := strconv.Atoi(vars["bid"])
 	board := models.Board{}
-	result := appEnv.DBConn.First(&board, bid)
+	result := appEnv.DBConn.Preload("Sections").First(&board, bid)
 	if result.Error != nil {
 		response := status.Response{
 			Status:  strconv.Itoa(http.StatusNotFound),

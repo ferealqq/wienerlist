@@ -3,6 +3,7 @@ module github.com/ferealqq/golang-trello-copy/server
 go 1.15
 
 require (
+	github.com/bxcodec/faker/v3 v3.8.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect

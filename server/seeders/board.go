@@ -3,6 +3,7 @@ package seeders
 import (
 	"log"
 
+	faker "github.com/bxcodec/faker/v3"
 	. "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	. "github.com/ferealqq/golang-trello-copy/server/pkg/seed"
 	"gorm.io/gorm"
@@ -14,6 +15,14 @@ func CreateBoard(db *gorm.DB, title string, desc string) (*gorm.DB) {
 		Description: desc,
 	})
 }
+
+func CreateBoardFaker(db *gorm.DB) {
+	db.Create(&Board{
+		Title: faker.Word(),
+		Description: faker.Sentence(),
+	});
+}
+
 
 func BoardAll() []Seed {
 	return []Seed{

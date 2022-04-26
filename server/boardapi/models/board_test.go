@@ -9,6 +9,7 @@ import (
 
 
 func TestCreateBoard(t *testing.T) {
+	// FIXME randomly tests fail
 	database.TestDBInit()
 
 	b := Board{

@@ -11,10 +11,11 @@ import (
 	. "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
 	. "github.com/ferealqq/golang-trello-copy/server/pkg/testing"
-	"github.com/ferealqq/golang-trello-copy/server/seeders"
+	. "github.com/ferealqq/golang-trello-copy/server/seeders"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/negroni"
+	"gorm.io/gorm"
 )
 
 
@@ -25,6 +26,8 @@ type TestAction struct {
 	Handler func(http.ResponseWriter, *http.Request, AppEnv)
 	Method string
 	Body io.Reader
+	Seeders []func(db *gorm.DB)
+	Tables []string
 }
 
 // FIXME create test "suite" so you can use multiple database connections
@@ -32,7 +35,7 @@ type TestAction struct {
 func BoardHandlerAction(action TestAction) *httptest.ResponseRecorder {
 	appEnv := CreateContextForTestSetup()
 	//FIXME figure out a better way to give out the table name, table names could change so this is a little problematic approach
-	ReinitTable(appEnv.DBConn, "boards", seeders.SeedBoards)
+	ReinitTables(appEnv.DBConn, action.Tables, action.Seeders)
 	r, _ := http.NewRequest(action.Method, action.ReqPath, action.Body)
 	w := httptest.NewRecorder()
 	router := mux.NewRouter().StrictSlash(true)
@@ -56,11 +59,13 @@ func TestListBoardsHandler(t *testing.T) {
 		ReqPath:    "/boards",
 		Name:       "ListBoardsHandler",
 		Handler:    ListBoardsHandler,
+		Seeders:    []func(db *gorm.DB){SeedBoards},
+		Tables:		[]string{"boards"},
 	})
 	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
 	var d map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &d)
-	assert.Equal(t, len(seeders.BoardAll()), int(d["count"].(float64)), "they should be equal")
+	assert.Equal(t, len(BoardAll()), int(d["count"].(float64)), "they should be equal")
 }
 
 func TestPostBoardHandler(t *testing.T){
@@ -80,6 +85,8 @@ func TestPostBoardHandler(t *testing.T){
 		Name:    "CreateBoardHandler",
 		Handler: CreateBoardHandler,
 		Body:    bytes.NewReader(b),
+		Seeders:    []func(db *gorm.DB){SeedBoards},
+		Tables:		[]string{"boards"},
 	})			
 
 	assert.Equal(t, http.StatusCreated, response.Code, "they should be equal")
@@ -102,6 +109,8 @@ func TestDeleteBoardHandler(t *testing.T){
 		ReqPath:    "/boards/1",
 		Name:       "DeleteBoardHandler",
 		Handler:    DeleteBoardHandler,
+		Seeders:    []func(db *gorm.DB){SeedBoards},
+		Tables:		[]string{"boards"},
 	})				
 
 	var boards []Board
@@ -120,6 +129,8 @@ func TestGetBoardHandler(t *testing.T){
 		ReqPath:    "/boards/1",
 		Name:       "GetBoardHandler",
 		Handler:    GetBoardHandler,
+		Seeders:    []func(db *gorm.DB){SeedBoards},
+		Tables:		[]string{"boards"},
 	})				
 	
 	var boards []Board
@@ -147,6 +158,8 @@ func TestUpdateBoardHandler(t *testing.T){
 		Name:       "UpdateBoardHandler",
 		Handler:    UpdateBoardHandler,
 		Body:	    bytes.NewReader(b),	
+		Seeders:    []func(db *gorm.DB){SeedBoards},
+		Tables:		[]string{"boards"},
 	})				
 	
 	var boards []Board
@@ -158,4 +171,27 @@ func TestUpdateBoardHandler(t *testing.T){
 	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal") 
 	assert.Equal(t, board.Title, d["Title"], "they should be equal") 
 	assert.Equal(t, board.Description, d["Description"], "they should be equal") 
+}
+
+
+func TestPreloadGetBoard(t *testing.T){
+	response := BoardHandlerAction(TestAction{
+		Method:     http.MethodGet,
+		RouterPath: "/boards/{bid:[0-9]+}",
+		ReqPath:    "/boards/1",
+		Name:       "GetBoardHandler",
+		Handler:    GetBoardHandler,
+		Seeders:    []func(db *gorm.DB){CreateBoardFaker, SeedSections},
+		Tables:		[]string{"boards", "sections"},
+	})				
+	
+	
+	var board Board
+	database.DBConn.Preload("Sections").First(&board)
+	var d map[string]interface{}
+	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
+
+	json.Unmarshal(response.Body.Bytes(), &d)
+	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal") 	
+	assert.Equal(t, len(board.Sections), len(d["Sections"].([]interface{})), "they should be equal")
 }
