@@ -5,14 +5,18 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.41.1
+    hooks:
+      - id: golangci-lint
+
   - repo: local
     hooks:
       - id: gofmt
         name: gofmt
         # Format only the files that have been modified. If we format would every file in the repo, it would be to slow.
         # --diff-filter=ACMRTUXB filters out the files that have been deleted
-        # sed -e "s/^server\///" removes the server/ prefix from the file name. Gofmt cannot find files for example /server/main.go
-        entry: bash -c 'gofmt -l -w $(git diff --diff-filter=ACMRTUXB --name-only --cached | grep .go | sed -e "s/^server\///") ; git add -u' --
+        entry: bash -c 'gofmt -l -w $(git diff --diff-filter=ACMRTUXB --name-only --cached | grep .go) ; git add -u' --
         # Format all files in the repo. It is slow, so we prefer to format only the files that have been modified.
         # entry: bash -c 'gofmt -l -w $(ls -d -- */ | grep -v vendor/ ; ls | grep *.go) ; git add -u' --
         language: golang

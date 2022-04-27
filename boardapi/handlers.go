@@ -70,7 +70,7 @@ func CreateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 		appEnv.sendInternalServerError(w, "Error creating a board", result.Error)
 		return
 	}
-	appEnv.Render.JSON(w, http.StatusCreated, board)
+	appEnv.sendJSON(w, http.StatusCreated, board)
 }
 
 // GetBoardHandler gets a board from the board store by id
