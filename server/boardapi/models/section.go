@@ -7,13 +7,13 @@ import (
 
 // Database model for board
 type Section struct {
-	ID uint `gorm:"primary_key"`
-	Title string
+	ID          uint `gorm:"primary_key"`
+	Title       string
 	Description string
-	Placement int
-	BoardId uint
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Placement   int
+	BoardId     uint
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // GoString implements the GoStringer interface so we can display the full struct during debugging

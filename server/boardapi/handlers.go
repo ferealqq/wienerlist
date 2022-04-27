@@ -2,7 +2,6 @@ package boardapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -12,7 +11,6 @@ import (
 
 	// . "github.com/ferealqq/golang-trello-copy/server/pkg/utils"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 )
 
 // HandlerFunc is a custom implementation of the http.HandlerFunc
@@ -36,30 +34,20 @@ func HealthcheckHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 		AppName: "golang-trello-copy",
 		Version: appEnv.Version,
 	}
-	appEnv.Render.JSON(w, http.StatusOK, check)
+	appEnv.sendJSON(w, http.StatusOK, check)
 }
 
 func ListBoardsHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 	var boards []models.Board
 	result := appEnv.DBConn.Preload("Sections").Find(&boards)
 	if result.Error != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusInternalServerError),
-			Message: "Error fetching boards",
-		}
-		fmt.Println(result.Error)
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusInternalServerError,
-			"error":  result.Error,
-		}).Error("Error fetching boards")
-		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
+		appEnv.sendInternalServerError(w, "Error listing boards", result.Error)
 		return
 	}
 	responseObject := make(map[string]interface{})
 	responseObject["bords"] = boards
 	responseObject["count"] = len(boards)
-	appEnv.Render.JSON(w, http.StatusOK, responseObject)
+	appEnv.sendJSON(w, http.StatusOK, responseObject)
 }
 
 func CreateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
@@ -67,36 +55,21 @@ func CreateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 	var b models.Board
 	err := decoder.Decode(&b)
 	if err != nil {
-		response := status.Response{
+		appEnv.sendJSON(w, http.StatusBadRequest, status.Response{
 			Status:  strconv.Itoa(http.StatusBadRequest),
 			Message: "malformed board object",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusBadRequest,
-		}).Error("malformed board object")
-		appEnv.Render.JSON(w, http.StatusBadRequest, response)
+		})
 		return
 	}
 	board := models.Board{
-		Title: 		 b.Title,
+		Title:       b.Title,
 		Description: b.Description,
 	}
 	result := appEnv.DBConn.Create(&board)
 	if result.Error != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusInternalServerError),
-			Message: "error creating board",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusInternalServerError,
-			"error": result.Error,
-		}).Error("error creating board")
-		appEnv.Render.JSON(w, http.StatusCreated, response)
+		appEnv.sendInternalServerError(w, "Error creating a board", result.Error)
 		return
 	}
-
 	appEnv.Render.JSON(w, http.StatusCreated, board)
 }
 
@@ -107,19 +80,13 @@ func GetBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv) {
 	board := models.Board{}
 	result := appEnv.DBConn.Preload("Sections").First(&board, bid)
 	if result.Error != nil {
-		response := status.Response{
+		appEnv.sendJSON(w, http.StatusNotFound, status.Response{
 			Status:  strconv.Itoa(http.StatusNotFound),
-			Message: "can't find board",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusNotFound,
-			"error":  result.Error,
-		}).Error("Can't find board")
-		appEnv.Render.JSON(w, http.StatusNotFound, response)
+			Message: "Can't find board",
+		})
 		return
 	}
-	appEnv.Render.JSON(w, http.StatusOK, board)
+	appEnv.sendJSON(w, http.StatusOK, board)
 }
 
 // Update a board in the board store
@@ -130,39 +97,25 @@ func UpdateBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 	var b models.Board
 	err := decoder.Decode(&b)
 	if err != nil {
-		response := status.Response{
+		appEnv.sendJSON(w, http.StatusBadRequest, status.Response{
 			Status:  strconv.Itoa(http.StatusBadRequest),
 			Message: "malformed board object",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusBadRequest,
-		}).Error("malformed board object")
-		appEnv.Render.JSON(w, http.StatusBadRequest, response)
+		})
 		return
 	}
 
 	board := models.Board{
-		ID: 		 uint(bid),
-		Title: 		 b.Title,
+		ID:          uint(bid),
+		Title:       b.Title,
 		Description: b.Description,
 	}
 
-	if err = appEnv.DBConn.Model(&board).Updates(&board).Error ; err != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusInternalServerError),
-			Message: "error updating board",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusInternalServerError,
-			"error":  err,
-		}).Error("error updating board")
-		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
+	if err = appEnv.DBConn.Model(&board).Updates(&board).Error; err != nil {
+		appEnv.sendInternalServerError(w, "Error updating board", err)
 		return
 	}
 
-	appEnv.Render.JSON(w, http.StatusOK, board)
+	appEnv.sendJSON(w, http.StatusOK, board)
 }
 
 // Delete a board from the board store
@@ -172,30 +125,16 @@ func DeleteBoardHandler(w http.ResponseWriter, req *http.Request, appEnv AppEnv)
 	board := models.Board{}
 	result := appEnv.DBConn.Delete(&board, bid)
 	if result.Error != nil {
-		response := status.Response{
-			Status:  strconv.Itoa(http.StatusInternalServerError),
-			Message: "error deleting board",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusInternalServerError,
-			"error": result.Error,
-		}).Error("Error deleting board")
-		appEnv.Render.JSON(w, http.StatusInternalServerError, response)
+		appEnv.sendInternalServerError(w, "Error deleting board", result.Error)
 		return
 	}
 	// If the board was not found and due to it not being found it couldn't be deleted
 	if result.RowsAffected == 0 {
-		response := status.Response{
+		appEnv.sendJSON(w, http.StatusNotFound, status.Response{
 			Status:  strconv.Itoa(http.StatusNotFound),
-			Message: "can't find board",
-		}
-		log.WithFields(log.Fields{
-			"env":    appEnv.Env,
-			"status": http.StatusNotFound,
-		}).Error("Can't find board")
-		appEnv.Render.JSON(w, http.StatusNotFound, response)
+			Message: "Can't find board",
+		})
 		return
 	}
-	appEnv.Render.JSON(w, http.StatusOK, board)
+	appEnv.sendJSON(w, http.StatusOK, board)
 }

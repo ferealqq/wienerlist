@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestCreateBoard(t *testing.T) {
 	// FIXME randomly tests fail
 	database.TestDBInit()
@@ -18,7 +17,7 @@ func TestCreateBoard(t *testing.T) {
 	}
 	result := database.DBConn.Create(&b)
 	if assert.Nil(t, result.Error) {
-		assert.NotNil(t,b.ID, "should exist")
+		assert.NotNil(t, b.ID, "should exist")
 		assert.Equal(t, "This is a new test board", b.Title, "they should be equal")
 		assert.Equal(t, "This is a board for app development", b.Description, "they should be equal")
 	}
@@ -26,7 +25,7 @@ func TestCreateBoard(t *testing.T) {
 	defer database.Close()
 }
 
-func TestGetBoard(t *testing.T){
+func TestGetBoard(t *testing.T) {
 	database.TestDBInit()
 
 	b := Board{
@@ -35,7 +34,7 @@ func TestGetBoard(t *testing.T){
 	}
 	result := database.DBConn.Create(&b)
 	if assert.Nil(t, result.Error) {
-		assert.NotNil(t,b.ID, "should exist")
+		assert.NotNil(t, b.ID, "should exist")
 		assert.Equal(t, "This is a new test board", b.Title, "they should be equal")
 		assert.Equal(t, "This is a board for app development", b.Description, "they should be equal")
 	}

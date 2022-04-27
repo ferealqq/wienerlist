@@ -2,7 +2,6 @@ package boardapi
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/unrolled/secure"
@@ -13,8 +12,7 @@ import (
 func StartServer(appEnv AppEnv) {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
-		var handler http.Handler
-		handler = MakeHandler(appEnv, route.HandlerFunc)
+		handler := MakeHandler(appEnv, route.HandlerFunc)
 		router.
 			Methods(route.Method).
 			Path(route.Pattern).

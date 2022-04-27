@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	api "github.com/ferealqq/golang-trello-copy/server/boardapi"
-	"github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	"github.com/ferealqq/golang-trello-copy/server/migrations"
 	database "github.com/ferealqq/golang-trello-copy/server/pkg/database"
 	vparse "github.com/ferealqq/golang-trello-copy/server/pkg/version"
@@ -57,20 +56,25 @@ func main() {
 	// Initialise data storage
 	// ===========================================================================
 	database.InitDB()
-	if env == LOCAL{
-		migrations.MigrateSeedAfterwards(database.DBConn)
-	}else{
-		migrations.Migrate(database.DBConn)
+	if env == LOCAL {
+		migrations.MigrateSeedAfterwards(
+			database.DBConn)
+	} else {
+		err = migrations.Migrate(database.DBConn)
+		if err != nil {
+			// TODO we probably should not panic here. We should log it and try again?
+			panic(err)
+		}
 	}
 	// ===========================================================================
 	// Initialise application context
 	// ===========================================================================
 	appEnv := api.AppEnv{
-		Render:    	render.New(),
-		Version:   	version,
-		Env:       	env,
-		Port:      	port,
-		DBConn: 	database.DBConn,
+		Render:  render.New(),
+		Version: version,
+		Env:     env,
+		Port:    port,
+		DBConn:  database.DBConn,
 	}
 	// ===========================================================================
 	// Start application
@@ -78,18 +82,4 @@ func main() {
 	api.StartServer(appEnv)
 
 	defer database.Close()
-}
-
-func seed(){
-	board := models.Board{
-		Title: "Test Board",
-		Description: "Test Board Description",
-	}
-	result := database.DBConn.Create(&board)
-	if result.Error != nil {
-		log.WithFields(log.Fields{
-			"err": result.Error,
-		}).Fatal("Can't create board")
-		return
-	}
 }

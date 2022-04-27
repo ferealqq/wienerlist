@@ -13,9 +13,10 @@ func Migrate(db *gorm.DB) error {
 	// Is it a antipattern to be constantly closing db connections?
 	return db.AutoMigrate(&Board{}, &Section{})
 }
+
 type TableToHandle struct {
 	TableInterface interface{}
-	SeederFunc func(db *gorm.DB)
+	SeederFunc     func(db *gorm.DB)
 }
 
 type TablesToHandle []TableToHandle
@@ -28,27 +29,29 @@ func (tables TablesToHandle) tableInterfaces() []interface{} {
 	return list
 }
 
-func MigrateSeedAfterwards(db *gorm.DB){
+func MigrateSeedAfterwards(db *gorm.DB) {
 	list := TablesToHandle{
 		{
-			SeederFunc: SeedBoards,
+			SeederFunc:     SeedBoards,
 			TableInterface: &Board{},
 		},
 		{
-			SeederFunc: SeedSections,
+			SeederFunc:     SeedSections,
 			TableInterface: &Section{},
 		},
 	}
 	if err := Migrate(db); err == nil && HasAllTables(db, list.tableInterfaces()...) {
 		for _, table := range list {
-			if err := db.First(table.TableInterface).Error; errors.Is(err, gorm.ErrRecordNotFound) {	
+			if err := db.First(table.TableInterface).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 				table.SeederFunc(db)
 			}
 		}
+	} else {
+		panic(err)
 	}
 }
 
-func HasAllTables(db *gorm.DB,list ...interface{}) bool {
+func HasAllTables(db *gorm.DB, list ...interface{}) bool {
 	// list of interfaces struct
 	for _, table := range list {
 		db.Migrator()

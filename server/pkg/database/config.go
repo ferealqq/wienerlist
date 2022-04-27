@@ -8,10 +8,11 @@ import (
 var (
 	DBConn *gorm.DB
 )
+
 /**
  * Initialize the database connection
  */
-func InitDB(){
+func InitDB() {
 	var err error
 	// TODO check that the database connection is closed or not initialized
 	dsn := "host=localhost user=postgres password=postgres dbname=BOARD port=5432 sslmode=disable TimeZone=Asia/Shanghai"
@@ -21,10 +22,11 @@ func InitDB(){
 		panic(err)
 	}
 }
+
 /**
 * Close the current database connection
-*/
-func Close(){
+ */
+func Close() {
 	db, err := DBConn.DB()
 
 	if err != nil {
@@ -34,7 +36,7 @@ func Close(){
 	db.Close()
 }
 
-func TestDBInit(){
+func TestDBInit() {
 	var err error
 	// TODO check that the database connection is closed or not initialized
 	// FIXME Database configurations to env

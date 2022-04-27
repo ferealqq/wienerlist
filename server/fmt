@@ -1,0 +1,2 @@
+# format the whole project
+gofmt -l -w $(ls -d -- */ | grep -v vendor/ ; ls | grep *.go)

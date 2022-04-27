@@ -7,12 +7,12 @@ import (
 
 // Database model for board
 type Board struct {
-	ID uint `gorm:"primary_key"`
-	Title string
+	ID          uint `gorm:"primary_key"`
+	Title       string
 	Description string
-	Sections []Section `gorm:"foreignkey:BoardId"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Sections    []Section `gorm:"foreignkey:BoardId"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // GoString implements the GoStringer interface so we can display the full struct during debugging

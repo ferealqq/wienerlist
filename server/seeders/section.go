@@ -9,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateSection(db *gorm.DB, title string, desc string, boardId uint) (*gorm.DB) {
+func CreateSection(db *gorm.DB, title string, desc string, boardId uint) *gorm.DB {
 	return db.Create(&Section{
-		Title: title,
+		Title:       title,
 		Description: desc,
-		BoardId: boardId,
+		BoardId:     boardId,
 	})
 }
 
@@ -21,14 +21,14 @@ func SectionAll() []Seed {
 	return []Seed{
 		{
 			Name: "Three sections for board 1",
-			Run: func(db *gorm.DB) (*gorm.DB) {
+			Run: func(db *gorm.DB) *gorm.DB {
 				var board Board
 				result := db.First(&board)
 				if result.Error == nil {
 					for i := 0; i < 3; i++ {
 						//FIXME Could be done with a batch insert but i'm lazy
 						res := CreateSection(db, "Section 1", "This is a section for the board", board.ID)
-						if(res.Error != nil){
+						if res.Error != nil {
 							panic(res.Error)
 						}
 					}
@@ -40,22 +40,21 @@ func SectionAll() []Seed {
 						for i := 0; i < 3; i++ {
 							//FIXME Could be done with a batch insert but i'm lazy
 							res := CreateSection(db, "Section 1", "This is a section for the board", board.ID)
-							if(res.Error != nil){
+							if res.Error != nil {
 								panic(res.Error)
 							}
 						}
 						return db
-					}else{
+					} else {
 						panic(result.Error)
 					}
 				} else {
 					panic(result.Error)
 				}
-			},	
+			},
 		},
 	}
 }
-
 
 func SeedSections(db *gorm.DB) {
 	for _, seed := range SectionAll() {
