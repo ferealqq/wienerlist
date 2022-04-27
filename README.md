@@ -1,10 +1,10 @@
 # Cheatsheat of useful stuff
 
 Dependencies:
-* Language:   [Golang](https://go.dev)
+* Language:   [golang](https://go.dev)
 * ORM:        [GORM](https://gorm.io)
-* Web:        [Mux](https://github.com/gorilla/mux)
-* Hot reload: [Fresh](https://www.github.com/pilu/fresh) for hot reload
+* Web:        [gin](https://gin-gonic.com/docs/)
+* Hot reload: [fresh](https://www.github.com/pilu/fresh) 
 * Formatter:  [gofmt](https://pkg.go.dev/cmd/gofmt)
 * Linter:     [golangci-lint](https://golangci-lint.run)
 
