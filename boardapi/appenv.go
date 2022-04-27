@@ -7,12 +7,13 @@ import (
 	"github.com/ferealqq/golang-trello-copy/server/migrations"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/status"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/unrolled/render"
 	"gorm.io/gorm"
 )
 
-// AppEnv holds application configuration data
+// FIXME: AppEnv renamed to controller?
 type AppEnv struct {
 	Render  *render.Render
 	Version string
@@ -22,33 +23,34 @@ type AppEnv struct {
 	DBConn *gorm.DB
 }
 
-// Send JSON response to client if able to. In case of error return ISE
-func (a *AppEnv) sendJSON(w http.ResponseWriter, status int, json interface{}) {
-	if err := a.Render.JSON(w, status, json); err != nil {
-		a.sendInternalServerError(w, "Error sending JSON response", err)
-	}
+func (a *AppEnv) sendJSON(context *gin.Context, status int, json interface{}) {
+	context.JSON(status, json)
 }
 
-// Send ISE response to client in case of error log it
-func (a *AppEnv) sendInternalServerError(w http.ResponseWriter, message string, err error) {
-	response := status.Response{
-		Status:  strconv.Itoa(http.StatusInternalServerError),
-		Message: message,
-	}
-
+func (a *AppEnv) sendInternalServerError(context *gin.Context, message string, err error) {
 	log.WithFields(log.Fields{
 		"env":    a.Env,
 		"status": http.StatusInternalServerError,
 		"error":  err,
 	}).Error(message)
+	a.sendJSON(context, http.StatusInternalServerError, gin.H{"message": message})
+}
 
-	// If the AppEnv.Render.JSON() call fails, we need to send a 500 response and just log the error. We can't do more at this point
-	if newErr := a.Render.JSON(w, http.StatusInternalServerError, response); newErr != nil {
-		log.WithFields(log.Fields{
-			"env":   a.Env,
-			"error": newErr,
-		}).Error("Couldn't send ISE response to client. Render could be broken")
+// FIXME move this to a pkg file
+type UriId struct {
+	ID uint `uri:"id" binding:"required,gt=0"`
+}
+
+func (a *AppEnv) getUriId(c *gin.Context) (uint, error) {
+	var uri UriId
+	if e := c.ShouldBindUri(&uri); e != nil {
+		a.sendJSON(c, http.StatusBadRequest, status.Response{
+			Status:  strconv.Itoa(http.StatusBadRequest),
+			Message: "malformed id",
+		})
+		return 0, e
 	}
+	return uri.ID, nil
 }
 
 // CreateContextForTestSetup initialises an application context struct

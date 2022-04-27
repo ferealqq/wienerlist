@@ -3,27 +3,16 @@ package boardapi
 import (
 	"log"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/unrolled/secure"
 	"github.com/urfave/negroni"
 )
 
 // StartServer Wraps the mux Router and uses the Negroni Middleware
 func StartServer(appEnv AppEnv) {
-	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes {
-		handler := MakeHandler(appEnv, route.HandlerFunc)
-		router.
-			Methods(route.Method).
-			Path(route.Pattern).
-			Name(route.Name).
-			Handler(handler)
-	}
-	// security
-	var isDevelopment = false
-	if appEnv.Env == "LOCAL" {
-		isDevelopment = true
-	}
+	router := gin.Default()
+	BoardRouter(router, appEnv)
+	isDevelopment := appEnv.Env == "LOCAL"
 	secureMiddleware := secure.New(secure.Options{
 		// This will cause the AllowedHosts, SSLRedirect, and STSSeconds/STSIncludeSubdomains
 		// options to be ignored during development. When deploying to production,
