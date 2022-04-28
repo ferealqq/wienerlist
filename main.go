@@ -6,10 +6,10 @@ import (
 
 	api "github.com/ferealqq/golang-trello-copy/server/boardapi"
 	"github.com/ferealqq/golang-trello-copy/server/migrations"
+	. "github.com/ferealqq/golang-trello-copy/server/pkg/container"
 	database "github.com/ferealqq/golang-trello-copy/server/pkg/database"
 	vparse "github.com/ferealqq/golang-trello-copy/server/pkg/version"
 	log "github.com/sirupsen/logrus"
-	"github.com/unrolled/render"
 )
 
 var (
@@ -69,8 +69,7 @@ func main() {
 	// ===========================================================================
 	// Initialise application context
 	// ===========================================================================
-	appEnv := api.AppEnv{
-		Render:  render.New(),
+	appContainer := AppContainer{
 		Version: version,
 		Env:     env,
 		Port:    port,
@@ -79,7 +78,7 @@ func main() {
 	// ===========================================================================
 	// Start application
 	// ===========================================================================
-	api.StartServer(appEnv)
+	api.StartServer(appContainer)
 
 	defer database.Close()
 }

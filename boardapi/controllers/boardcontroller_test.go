@@ -1,8 +1,9 @@
-package boardapi
+package controllers
 
 import (
 	"testing"
 
+	. "github.com/ferealqq/golang-trello-copy/server/pkg/container"
 	"github.com/stretchr/testify/assert"
 )
 

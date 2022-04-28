@@ -1,14 +1,18 @@
 package boardapi
 
-import "github.com/gin-gonic/gin"
+import (
+	. "github.com/ferealqq/golang-trello-copy/server/boardapi/controllers"
+	. "github.com/ferealqq/golang-trello-copy/server/pkg/container"
+	"github.com/gin-gonic/gin"
+)
 
-func BoardRouter(router *gin.Engine, appEnv AppEnv) {
+func BoardRouter(router *gin.Engine, appC AppContainer) {
 	r := router.Group("/boards")
 	{
-		r.GET("/", MakeHandler(appEnv, ListBoardsHandler))
-		r.POST("/", MakeHandler(appEnv, CreateBoardHandler))
-		r.GET("/:id", MakeHandler(appEnv, GetBoardHandler))
-		r.PUT("/:id", MakeHandler(appEnv, UpdateBoardHandler))
-		r.DELETE("/:id", MakeHandler(appEnv, DeleteBoardHandler))
+		r.GET("/", MakeHandler(appC, ListBoardsHandler))
+		r.POST("/", MakeHandler(appC, CreateBoardHandler))
+		r.GET("/:id", MakeHandler(appC, GetBoardHandler))
+		r.PUT("/:id", MakeHandler(appC, UpdateBoardHandler))
+		r.DELETE("/:id", MakeHandler(appC, DeleteBoardHandler))
 	}
 }
