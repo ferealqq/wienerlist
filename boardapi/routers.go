@@ -1,18 +1,19 @@
 package boardapi
 
 import (
-	. "github.com/ferealqq/golang-trello-copy/server/boardapi/controllers"
-	. "github.com/ferealqq/golang-trello-copy/server/pkg/container"
+	boardCtrl "github.com/ferealqq/golang-trello-copy/server/boardapi/controllers"
+	app "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
+	controllers "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
 	"github.com/gin-gonic/gin"
 )
 
-func BoardRouter(router *gin.Engine, appC AppContainer) {
+func BoardRouter(router *gin.Engine, appEnv app.AppEnv) {
 	r := router.Group("/boards")
 	{
-		r.GET("/", MakeHandler(appC, ListBoardsHandler))
-		r.POST("/", MakeHandler(appC, CreateBoardHandler))
-		r.GET("/:id", MakeHandler(appC, GetBoardHandler))
-		r.PUT("/:id", MakeHandler(appC, UpdateBoardHandler))
-		r.DELETE("/:id", MakeHandler(appC, DeleteBoardHandler))
+		r.GET("/", controllers.MakeHandler(appEnv, boardCtrl.ListBoardsHandler))
+		r.POST("/", controllers.MakeHandler(appEnv, boardCtrl.CreateBoardHandler))
+		r.GET("/:id", controllers.MakeHandler(appEnv, boardCtrl.GetBoardHandler))
+		r.PUT("/:id", controllers.MakeHandler(appEnv, boardCtrl.UpdateBoardHandler))
+		r.DELETE("/:id", controllers.MakeHandler(appEnv, boardCtrl.DeleteBoardHandler))
 	}
 }

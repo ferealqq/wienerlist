@@ -3,14 +3,14 @@ package controllers
 import (
 	"testing"
 
-	. "github.com/ferealqq/golang-trello-copy/server/pkg/container"
+	app "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
+	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMakeHandler(t *testing.T) {
-	a := CreateContextForTestSetup()
-
-	assert.NotNil(t, MakeHandler(a, GetBoardHandler))
+	appenv := app.CreateTestAppEnv()
+	assert.NotNil(t, ctrl.MakeHandler(appenv, GetBoardHandler))
 }
 
 /**

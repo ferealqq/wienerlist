@@ -3,15 +3,15 @@ package migrations
 import (
 	"errors"
 
-	. "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
-	. "github.com/ferealqq/golang-trello-copy/server/seeders"
+	m "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
+	s "github.com/ferealqq/golang-trello-copy/server/seeders"
 	"gorm.io/gorm"
 )
 
 func Migrate(db *gorm.DB) error {
 	// FIXME: not sure should we open & close the db connection here.
 	// Is it a antipattern to be constantly closing db connections?
-	return db.AutoMigrate(&Board{}, &Section{})
+	return db.AutoMigrate(&m.Board{}, &m.Section{})
 }
 
 type TableToHandle struct {
@@ -32,12 +32,12 @@ func (tables TablesToHandle) tableInterfaces() []interface{} {
 func MigrateSeedAfterwards(db *gorm.DB) {
 	list := TablesToHandle{
 		{
-			SeederFunc:     SeedBoards,
-			TableInterface: &Board{},
+			SeederFunc:     s.SeedBoards,
+			TableInterface: &m.Board{},
 		},
 		{
-			SeederFunc:     SeedSections,
-			TableInterface: &Section{},
+			SeederFunc:     s.SeedSections,
+			TableInterface: &m.Section{},
 		},
 	}
 	if err := Migrate(db); err == nil && HasAllTables(db, list.tableInterfaces()...) {

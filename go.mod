@@ -15,7 +15,6 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.7.0
 	github.com/ugorji/go v1.2.7 // indirect
-	github.com/unrolled/render v1.0.3
 	github.com/unrolled/secure v1.0.8
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect

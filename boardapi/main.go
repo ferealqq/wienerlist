@@ -3,17 +3,17 @@ package boardapi
 import (
 	"log"
 
-	. "github.com/ferealqq/golang-trello-copy/server/pkg/container"
+	a "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
 	"github.com/gin-gonic/gin"
 	"github.com/unrolled/secure"
 	"github.com/urfave/negroni"
 )
 
 // StartServer Wraps the mux Router and uses the Negroni Middleware
-func StartServer(appContainer AppContainer) {
+func StartServer(appEnv a.AppEnv) {
 	router := gin.Default()
-	BoardRouter(router, appContainer)
-	isDevelopment := appContainer.Env == "LOCAL"
+	BoardRouter(router, appEnv)
+	isDevelopment := appEnv.Env == "LOCAL"
 	secureMiddleware := secure.New(secure.Options{
 		// This will cause the AllowedHosts, SSLRedirect, and STSSeconds/STSIncludeSubdomains
 		// options to be ignored during development. When deploying to production,
@@ -33,13 +33,13 @@ func StartServer(appContainer AppContainer) {
 	n.Use(negroni.NewLogger())
 	n.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
 	n.UseHandler(router)
-	startupMessage := "===> Starting app (v" + appContainer.Version + ")"
-	startupMessage = startupMessage + " on port " + appContainer.Port
-	startupMessage = startupMessage + " in " + appContainer.Env + " mode."
+	startupMessage := "===> Starting app (v" + appEnv.Version + ")"
+	startupMessage = startupMessage + " on port " + appEnv.Port
+	startupMessage = startupMessage + " in " + appEnv.Env + " mode."
 	log.Println(startupMessage)
-	if appContainer.Env == "LOCAL" {
-		n.Run("localhost:" + appContainer.Port)
+	if appEnv.Env == "LOCAL" {
+		n.Run("localhost:" + appEnv.Port)
 	} else {
-		n.Run(":" + appContainer.Port)
+		n.Run(":" + appEnv.Port)
 	}
 }

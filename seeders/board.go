@@ -4,27 +4,27 @@ import (
 	"log"
 
 	faker "github.com/bxcodec/faker/v3"
-	. "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
-	. "github.com/ferealqq/golang-trello-copy/server/pkg/seed"
+	"github.com/ferealqq/golang-trello-copy/server/boardapi/models"
+	"github.com/ferealqq/golang-trello-copy/server/pkg/seed"
 	"gorm.io/gorm"
 )
 
 func CreateBoard(db *gorm.DB, title string, desc string) *gorm.DB {
-	return db.Create(&Board{
+	return db.Create(&models.Board{
 		Title:       title,
 		Description: desc,
 	})
 }
 
 func CreateBoardFaker(db *gorm.DB) {
-	db.Create(&Board{
+	db.Create(&models.Board{
 		Title:       faker.Word(),
 		Description: faker.Sentence(),
 	})
 }
 
-func BoardAll() []Seed {
-	return []Seed{
+func BoardAll() []seed.Seed {
+	return []seed.Seed{
 		{
 			Name: "Board 1",
 			Run: func(db *gorm.DB) *gorm.DB {

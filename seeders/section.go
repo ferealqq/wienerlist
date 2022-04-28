@@ -4,25 +4,25 @@ import (
 	"errors"
 	"log"
 
-	. "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
-	. "github.com/ferealqq/golang-trello-copy/server/pkg/seed"
+	"github.com/ferealqq/golang-trello-copy/server/boardapi/models"
+	"github.com/ferealqq/golang-trello-copy/server/pkg/seed"
 	"gorm.io/gorm"
 )
 
 func CreateSection(db *gorm.DB, title string, desc string, boardId uint) *gorm.DB {
-	return db.Create(&Section{
+	return db.Create(&models.Section{
 		Title:       title,
 		Description: desc,
 		BoardId:     boardId,
 	})
 }
 
-func SectionAll() []Seed {
-	return []Seed{
+func SectionAll() []seed.Seed {
+	return []seed.Seed{
 		{
 			Name: "Three sections for board 1",
 			Run: func(db *gorm.DB) *gorm.DB {
-				var board Board
+				var board models.Board
 				result := db.First(&board)
 				if result.Error == nil {
 					for i := 0; i < 3; i++ {
@@ -51,6 +51,8 @@ func SectionAll() []Seed {
 				} else {
 					panic(result.Error)
 				}
+
+				return db
 			},
 		},
 	}
