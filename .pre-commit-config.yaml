@@ -5,10 +5,11 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/golangci/golangci-lint
-    rev: v1.41.1
-    hooks:
-      - id: golangci-lint
+  # FIXME when issue this issue is resolved https://github.com/golangci/golangci-lint/issues/2649
+  # - repo: https://github.com/golangci/golangci-lint
+  #   rev: v1.45.2
+  #   hooks:
+  #     - id: golangci-lint
 
   - repo: local
     hooks:

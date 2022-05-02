@@ -55,7 +55,10 @@ func main() {
 	// ===========================================================================
 	// Initialise data storage
 	// ===========================================================================
-	database.InitDB()
+	if err := database.InitDB(); err != nil {
+		// FIXME do something?
+		panic(err)
+	}
 	if env == LOCAL {
 		migrations.MigrateSeedAfterwards(
 			database.DBConn)

@@ -11,10 +11,9 @@ import (
 )
 
 // HandlerFunc is a custom implementation of the http.HandlerFunc
-type HandlerFunc func(ctrl.BaseController)
 
 // HealthcheckHandler returns useful info about the app
-func HealthcheckHandler(baseController ctrl.BaseController) {
+func HealthcheckHandler(baseController ctrl.BaseController[models.Board]) {
 	check := health.Check{
 		AppName: "golang-trello-copy",
 		Version: baseController.AppEnv.Version,
@@ -22,7 +21,7 @@ func HealthcheckHandler(baseController ctrl.BaseController) {
 	baseController.SendJSON(http.StatusOK, check)
 }
 
-func ListBoardsHandler(baseController ctrl.BaseController) {
+func ListBoardsHandler(baseController ctrl.BaseController[models.Board]) {
 	var boards []models.Board
 	result := baseController.DB.Preload("Sections").Find(&boards)
 	if result.Error != nil {
@@ -35,7 +34,7 @@ func ListBoardsHandler(baseController ctrl.BaseController) {
 	baseController.SendJSON(http.StatusOK, responseObject)
 }
 
-func CreateBoardHandler(baseController ctrl.BaseController) {
+func CreateBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	// TODO Validation
 	var b models.Board
 	if b, err := baseController.GetPostModel(b); err == nil {
@@ -54,7 +53,7 @@ func CreateBoardHandler(baseController ctrl.BaseController) {
 }
 
 // GetBoardHandler gets a board from the board store by id
-func GetBoardHandler(baseController ctrl.BaseController) {
+func GetBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if ID, err := baseController.GetUriId(); err == nil {
 		board := models.Board{}
 		result := baseController.DB.Preload("Sections").First(&board, ID)
@@ -70,7 +69,7 @@ func GetBoardHandler(baseController ctrl.BaseController) {
 }
 
 // Update a board in the board store
-func UpdateBoardHandler(baseController ctrl.BaseController) {
+func UpdateBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if bid, err := baseController.GetUriId(); err == nil {
 		// TODO this should be a reusable function, used twice in this file
 		var b models.Board
@@ -92,7 +91,7 @@ func UpdateBoardHandler(baseController ctrl.BaseController) {
 }
 
 // Delete a board from the board store
-func DeleteBoardHandler(baseController ctrl.BaseController) {
+func DeleteBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if ID, err := baseController.GetUriId(); err == nil {
 		var board models.Board
 		result := baseController.DB.Delete(&board, ID)
