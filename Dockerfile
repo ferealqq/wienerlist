@@ -10,10 +10,11 @@ RUN go mod download
 RUN go build .
 
 ENV ENV=PRD
-ENV VERSION=app/VERSION
+ENV VERSION=/app/VERSION
 ENV PORT=3000
-ENV DB_DSN="host=board_db user=postgres password=postgres dbname=BOARD port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 ENV GIN_MODE=release
+# DB_DSN env is set in heroku for production. 
+# DB_DSN env is set in docker-production.yml for local production build testing. 
 
 EXPOSE 3000
 
