@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// FIXME: BaseController renamed to ControllerContainer/BaseController ? BaseController could be misleading.
 type BaseController[M interface{}] struct {
 	// Application environment
 	AppEnv appenv.AppEnv
@@ -35,7 +34,18 @@ func (a *BaseController[M]) SendInternalServerError(message string, err error) {
 	a.SendJSON(http.StatusInternalServerError, gin.H{"message": message})
 }
 
-// FIXME move this to a pkg file
+func (b *BaseController[M]) OptionalQueryNumber(param string, def int) int {
+	if val := b.Context.Query(param); val == "" {
+		return def
+	} else {
+		if val, err := strconv.Atoi(val); err == nil {
+			return val
+		} else {
+			return def
+		}
+	}
+}
+
 type UriId struct {
 	ID uint `uri:"id" binding:"required,gt=0"`
 }
@@ -52,7 +62,7 @@ func (b *BaseController[M]) GetUriId() (uint, error) {
 	return uri.ID, nil
 }
 
-// FIXME: Use generics with this function instead of hardcoded models.Board when project has been upgraded to go1.18
+// Get the post model of the request, incase of error send a bad request response
 func (b *BaseController[M]) GetPostModel(m M) (M, error) {
 	if err := b.Context.ShouldBindJSON(&m); err != nil {
 		// TODO Form a pattern in which we want to return error's

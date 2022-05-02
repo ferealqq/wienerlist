@@ -23,15 +23,20 @@ func HealthcheckHandler(baseController ctrl.BaseController[models.Board]) {
 
 func ListBoardsHandler(baseController ctrl.BaseController[models.Board]) {
 	var boards []models.Board
-	result := baseController.DB.Preload("Sections").Find(&boards)
+	result := baseController.DB.
+		Preload("Sections").
+		Limit(baseController.OptionalQueryNumber("limit", 100)).
+		Offset(baseController.OptionalQueryNumber("skip", 0)).
+		Find(&boards)
+
 	if result.Error != nil {
 		baseController.SendInternalServerError("Error listing boards", result.Error)
 		return
 	}
-	responseObject := make(map[string]interface{})
-	responseObject["bords"] = boards
-	responseObject["count"] = len(boards)
-	baseController.SendJSON(http.StatusOK, responseObject)
+	baseController.SendJSON(http.StatusOK, map[string]interface{}{
+		"boards": boards,
+		"count":  len(boards),
+	})
 }
 
 func CreateBoardHandler(baseController ctrl.BaseController[models.Board]) {
