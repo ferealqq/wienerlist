@@ -23,3 +23,20 @@ func ListSectionsHandler(baseController ctrl.BaseController[models.Section]) {
 		"count":    len(sections),
 	})
 }
+
+func CreateSectionHandler(baseController ctrl.BaseController[models.Section]) {
+	var s models.Section
+	if s, err := baseController.GetPostModel(s); err == nil {
+		section := models.Section{
+			Title:       s.Title,
+			Description: s.Description,
+			BoardId:     s.BoardId,
+		}
+		result := baseController.DB.Create(&section)
+		if result.Error != nil {
+			baseController.SendInternalServerError("Error creating a section", result.Error)
+			return
+		}
+		baseController.SendJSON(http.StatusCreated, section)
+	}
+}
