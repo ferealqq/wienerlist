@@ -14,6 +14,11 @@ func StartServer(appEnv a.AppEnv) {
 	router := gin.Default()
 	BoardRouter(router, appEnv)
 	isDevelopment := appEnv.Env == "LOCAL"
+
+	if !isDevelopment {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	secureMiddleware := secure.New(secure.Options{
 		// This will cause the AllowedHosts, SSLRedirect, and STSSeconds/STSIncludeSubdomains
 		// options to be ignored during development. When deploying to production,

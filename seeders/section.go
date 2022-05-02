@@ -51,8 +51,6 @@ func SectionAll() []seed.Seed {
 				} else {
 					panic(result.Error)
 				}
-
-				return db
 			},
 		},
 	}

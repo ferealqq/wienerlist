@@ -1,6 +1,8 @@
 package database
 
 import (
+	"os"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -15,7 +17,7 @@ var (
 func InitDB() {
 	var err error
 	// TODO check that the database connection is closed or not initialized
-	dsn := "host=localhost user=postgres password=postgres dbname=BOARD port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := os.Getenv("DB_DSN")
 	DBConn, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -40,7 +42,7 @@ func TestDBInit() {
 	var err error
 	// TODO check that the database connection is closed or not initialized
 	// FIXME Database configurations to env
-	dsn := "host=localhost user=postgres password=postgres dbname=TEST_BOARD port=5433 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := "host=0.0.0.0 user=postgres password=postgres dbname=postgres port=5433"
 	DBConn, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {

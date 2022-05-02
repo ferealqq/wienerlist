@@ -1,0 +1,27 @@
+version: '3.8'
+# For running the production container locally 
+services:
+  board_db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=BOARD
+    ports:
+      - '5432:5432'
+  board_api:
+    depends_on:
+      - board_db
+    build:
+      context: ./
+      dockerfile: Dockerfile.production
+    environment:
+      ENV: PRD
+      VERSION: /app/VERSION
+      PORT: 3000
+      DB_DSN: "host=board_db user=postgres password=postgres dbname=BOARD port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+      GIN_MODE: release
+    ports:
+      - 3000:3000
+  

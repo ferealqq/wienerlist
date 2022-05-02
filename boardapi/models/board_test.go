@@ -1,11 +1,23 @@
 package models
 
 import (
+	"os"
 	"testing"
 
 	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	database.TestDBInit()
+	if err := database.DBConn.AutoMigrate(&Board{}, &Section{}); err != nil {
+		panic(err)
+	}
+
+	m.Run()
+	defer database.Close()
+	os.Exit(0)
+}
 
 func TestCreateBoard(t *testing.T) {
 	// FIXME randomly tests fail
