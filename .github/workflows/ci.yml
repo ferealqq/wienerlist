@@ -5,12 +5,9 @@ on:
   pull_request:
 
 jobs:
-  # Label of the container job
-  container-job:
+  ci:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
-    # Docker Hub image that `container-job` executes in
-    container: node:10.18-jessie
 
     # Service containers to run with `container-job`
     services:
@@ -29,8 +26,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           
-  build:
-    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
