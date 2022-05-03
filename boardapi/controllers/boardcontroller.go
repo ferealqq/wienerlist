@@ -25,8 +25,8 @@ func ListBoardsHandler(baseController ctrl.BaseController[models.Board]) {
 	var boards []models.Board
 	result := baseController.DB.
 		Preload("Sections").
-		Limit(baseController.OptionalQueryNumber("limit", 100)).
-		Offset(baseController.OptionalQueryNumber("skip", 0)).
+		Limit(baseController.DefaultQueryInt("limit", 100)).
+		Offset(baseController.DefaultQueryInt("skip", 0)).
 		Find(&boards)
 
 	if result.Error != nil {

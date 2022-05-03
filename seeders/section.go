@@ -9,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateSection(db *gorm.DB, title string, desc string, boardId uint) *gorm.DB {
+func CreateSection(db *gorm.DB, title string, desc string, BoardId uint) *gorm.DB {
 	return db.Create(&models.Section{
 		Title:       title,
 		Description: desc,
-		BoardId:     boardId,
+		BoardId:     BoardId,
 	})
 }
 

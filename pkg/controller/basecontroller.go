@@ -41,7 +41,7 @@ func (a *BaseController[M]) SendNotFound(message string) {
 	})
 }
 
-func (b *BaseController[M]) OptionalQueryNumber(param string, def int) int {
+func (b *BaseController[M]) DefaultQueryInt(param string, def int) int {
 	if val := b.Context.Query(param); val == "" {
 		return def
 	} else {

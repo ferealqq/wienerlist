@@ -12,7 +12,8 @@ type Section struct {
 	Title       string `gorm:"not null"`
 	Description string
 	Placement   int
-	BoardId     uint `gorm:"not null"`
+	BoardId     uint   `gorm:"not null"`
+	Items       []Item `gorm:"foreignkey:SectionId"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

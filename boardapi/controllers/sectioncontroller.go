@@ -12,9 +12,13 @@ import (
 func ListSectionsHandler(base ctrl.BaseController[models.Section]) {
 	var sections []models.Section
 	result := base.DB.
-		Limit(base.OptionalQueryNumber("limit", 100)).
-		Offset(base.OptionalQueryNumber("skip", 0)).
-		Find(&sections)
+		Limit(base.DefaultQueryInt("limit", 100)).
+		Offset(base.DefaultQueryInt("skip", 0))
+
+	if boardIds, success := base.Context.GetQueryArray("BoardId"); success {
+		result.Where("board_id IN ?", boardIds)
+	}
+	result = result.Find(&sections)
 
 	if result.Error != nil {
 		base.SendInternalServerError("Error listing sections", result.Error)
