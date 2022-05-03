@@ -34,6 +34,13 @@ func (a *BaseController[M]) SendInternalServerError(message string, err error) {
 	a.SendJSON(http.StatusInternalServerError, gin.H{"message": message})
 }
 
+func (a *BaseController[M]) SendNotFound(message string) {
+	a.SendJSON(http.StatusNotFound, status.Response{
+		Status:  strconv.Itoa(http.StatusNotFound),
+		Message: message,
+	})
+}
+
 func (b *BaseController[M]) OptionalQueryNumber(param string, def int) int {
 	if val := b.Context.Query(param); val == "" {
 		return def
@@ -63,16 +70,16 @@ func (b *BaseController[M]) GetUriId() (uint, error) {
 }
 
 // Get the post model of the request, incase of error send a bad request response
-func (b *BaseController[M]) GetPostModel(m M) (M, error) {
+func (b *BaseController[M]) GetPostModel(m *M) error {
 	if err := b.Context.ShouldBindJSON(&m); err != nil {
 		// TODO Form a pattern in which we want to return error's
 		b.SendJSON(http.StatusBadRequest, status.Response{
 			Status:  strconv.Itoa(http.StatusBadRequest),
 			Message: "malformed object",
 		})
-		return m, err
+		return err
 	}
-	return m, nil
+	return nil
 }
 
 func MakeHandler[M interface{}](appEnv appenv.AppEnv, fn func(BaseController[M])) func(*gin.Context) {

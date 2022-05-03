@@ -5,13 +5,14 @@ import (
 	"time"
 )
 
-// Database model for board
+// FIXME figure out how to use migrations in production. For example if you add something AutoMigrate will take care of it. But if you delete something from a model, it does not migrate
+// Database model for section
 type Section struct {
-	ID          uint `gorm:"primary_key"`
-	Title       string
+	ID          uint   `gorm:"primary_key"`
+	Title       string `gorm:"not null"`
 	Description string
 	Placement   int
-	BoardId     uint
+	BoardId     uint `gorm:"not null"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

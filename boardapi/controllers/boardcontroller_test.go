@@ -83,7 +83,6 @@ func TestPostBoardHandler(t *testing.T) {
 		Title:       "Test Board",
 		Description: "This is a test board",
 	}
-	// to io reader
 	b, _ := json.Marshal(board)
 
 	action := HttpTestAction[Board]{

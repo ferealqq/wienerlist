@@ -23,8 +23,8 @@ func SectionRouter(router *gin.Engine, appEnv app.AppEnv) {
 	{
 		r.GET("/", controllers.MakeHandler(appEnv, ctrl.ListSectionsHandler))
 		r.POST("/", controllers.MakeHandler(appEnv, ctrl.CreateSectionHandler))
-		// r.GET("/:id", controllers.MakeHandler(appEnv, ctrl.GetSectionHandler))
-		// r.PUT("/:id", controllers.MakeHandler(appEnv, ctrl.UpdateSectionHandler))
-		// r.DELETE("/:id", controllers.MakeHandler(appEnv, ctrl.DeleteSectionHandler))
+		r.GET("/:id", controllers.MakeHandler(appEnv, ctrl.GetSectionHandler))
+		r.PUT("/:id", controllers.MakeHandler(appEnv, ctrl.UpdateSectionHandler))
+		r.DELETE("/:id", controllers.MakeHandler(appEnv, ctrl.DeleteSectionHandler))
 	}
 }

@@ -7,8 +7,8 @@ import (
 
 // Database model for board
 type Board struct {
-	ID          uint `gorm:"primary_key"`
-	Title       string
+	ID          uint   `gorm:"primary_key"`
+	Title       string `gorm:"not null"`
 	Description string
 	Sections    []Section `gorm:"foreignkey:BoardId"`
 	CreatedAt   time.Time

@@ -1,13 +1,13 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"strconv"
 
 	models "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/health"
-	"github.com/ferealqq/golang-trello-copy/server/pkg/status"
+	"gorm.io/gorm"
 )
 
 // HandlerFunc is a custom implementation of the http.HandlerFunc
@@ -42,7 +42,7 @@ func ListBoardsHandler(baseController ctrl.BaseController[models.Board]) {
 func CreateBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	// TODO Validation
 	var b models.Board
-	if b, err := baseController.GetPostModel(b); err == nil {
+	if err := baseController.GetPostModel(&b); err == nil {
 		board := models.Board{
 			// FIXME: Couldn't we just give the b model to the model?
 			Title:       b.Title,
@@ -62,11 +62,11 @@ func GetBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if ID, err := baseController.GetUriId(); err == nil {
 		board := models.Board{}
 		result := baseController.DB.Preload("Sections").First(&board, ID)
-		if result.Error != nil {
-			baseController.SendJSON(http.StatusNotFound, status.Response{
-				Status:  strconv.Itoa(http.StatusNotFound),
-				Message: "Can't find board",
-			})
+		if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			baseController.SendNotFound("Board not found")
+			return
+		} else if result.Error != nil {
+			baseController.SendInternalServerError("Error getting board", result.Error)
 			return
 		}
 		baseController.SendJSON(http.StatusOK, board)
@@ -78,7 +78,7 @@ func UpdateBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if bid, err := baseController.GetUriId(); err == nil {
 		// TODO this should be a reusable function, used twice in this file
 		var b models.Board
-		if b, err := baseController.GetPostModel(b); err == nil {
+		if err := baseController.GetPostModel(&b); err == nil {
 			board := models.Board{
 				ID:          uint(bid),
 				Title:       b.Title,
@@ -106,10 +106,7 @@ func DeleteBoardHandler(baseController ctrl.BaseController[models.Board]) {
 		}
 		// If the board was not found and due to it not being found it couldn't be deleted
 		if result.RowsAffected == 0 {
-			baseController.SendJSON(http.StatusNotFound, status.Response{
-				Status:  strconv.Itoa(http.StatusNotFound),
-				Message: "Can't find board",
-			})
+			baseController.SendNotFound("Board not found")
 			return
 		}
 		baseController.SendJSON(http.StatusOK, board)
