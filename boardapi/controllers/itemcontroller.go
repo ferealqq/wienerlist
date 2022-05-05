@@ -13,8 +13,8 @@ func ListItemsHandler(base ctrl.BaseController[models.Item]) {
 		Limit(base.DefaultQueryInt("limit", 100)).
 		Offset(base.DefaultQueryInt("skip", 0))
 
-	if boardIds, success := base.Context.GetQueryArray("BoardId"); success {
-		result.Where("board_id IN ?", boardIds)
+	if wsIds, success := base.Context.GetQueryArray("WorkspaceId"); success {
+		result.Where("workspace_id IN ?", wsIds)
 	}
 
 	if sectionIds, success := base.Context.GetQueryArray("SectionId"); success {
@@ -33,20 +33,36 @@ func ListItemsHandler(base ctrl.BaseController[models.Item]) {
 	})
 }
 
-func CreateItemHandler(base ctrl.BaseController[models.Section]) {
-	var s models.Section
-	if err := base.GetPostModel(&s); err == nil {
-		section := models.Section{
-			Title:       s.Title,
-			Description: s.Description,
-			BoardId:     s.BoardId,
+func CreateItemHandler(base ctrl.BaseController[models.Item]) {
+	var i models.Item
+	if err := base.GetPostModel(&i); err == nil {
+		item := models.Item{
+			Title:       i.Title,
+			Description: i.Description,
+			SectionId:   i.SectionId,
+			WorkspaceId: i.WorkspaceId,
 		}
-		result := base.DB.Create(&section)
+		result := base.DB.Create(&item)
 		if result.Error != nil {
-			base.SendInternalServerError("Error creating a section", result.Error)
+			base.SendInternalServerError("Error creating a item", result.Error)
 			return
 		}
-		base.SendJSON(http.StatusCreated, section)
+		base.SendJSON(http.StatusCreated, item)
+	}
+}
+
+func UpdateItemHandler(base ctrl.BaseController[models.Item]) {
+	if uriId, err := base.GetUriId(); err == nil {
+		var i models.Item
+		if err := base.GetPostModel(&i); err == nil {
+			result := base.DB.Model(&models.Item{}).Where("id = ?", uriId).Updates(i)
+			if result.Error != nil {
+				base.SendInternalServerError("Error updating a item", result.Error)
+				return
+			}
+			// Empty ok
+			base.SendJSON(http.StatusOK, nil)
+		}
 	}
 }
 

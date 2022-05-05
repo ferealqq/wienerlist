@@ -166,21 +166,21 @@ func TestGetBoardHandler(t *testing.T) {
 
 func TestUpdateBoardHandler(t *testing.T) {
 	// create a new board
-	board := Board{
+	b := Board{
 		Title:       "Title change",
 		Description: "Desc change",
 		WorkspaceId: 1,
 	}
 	// to io reader
-	b, _ := json.Marshal(board)
+	bJson, _ := json.Marshal(b)
 
 	action := HttpTestAction[Board]{
-		Method:  http.MethodPut,
+		Method:  http.MethodPatch,
 		ReqPath: "/boards/1",
 		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
-			e.PUT("/boards/:id", ctrl.MakeHandler(ae, UpdateBoardHandler))
+			e.PATCH("/boards/:id", ctrl.MakeHandler(ae, UpdateBoardHandler))
 		},
-		Body: bytes.NewReader(b),
+		Body: bytes.NewReader(bJson),
 		Seeders: []func(db *gorm.DB){func(db *gorm.DB) {
 			CreateWorkspaceFaker(db)
 		}, SeedBoards},
@@ -188,8 +188,8 @@ func TestUpdateBoardHandler(t *testing.T) {
 	}
 	response := action.Run()
 
-	var boards []Board
-	database.DBConn.Find(&boards)
+	var board Board
+	database.DBConn.First(&board, 1)
 	var d map[string]interface{}
 	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
 
@@ -197,9 +197,12 @@ func TestUpdateBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
-	assert.Equal(t, board.Title, d["Title"], "they should be equal")
-	assert.Equal(t, board.Description, d["Description"], "they should be equal")
+	assert.Equal(t, board.ID, uint(1), "they should be equal")
+	assert.Equal(t, board.Title, b.Title, "they should be equal")
+	assert.Equal(t, board.Description, b.Description, "they should be equal")
+	assert.NotNil(t, board.CreatedAt, "they should not be nil")
+	assert.NotNil(t, board.WorkspaceId, "they should not be nil")
+
 }
 
 func TestPreloadGetBoard(t *testing.T) {

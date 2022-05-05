@@ -48,6 +48,7 @@ func WorkspaceAll() []seed.Seed[models.Workspace] {
 func SeedWorkspaces(db *gorm.DB) {
 	for _, seed := range WorkspaceAll() {
 		if result := seed.Run(db); result.Error != nil {
+			// FIXME every SeederFunction should return a error if it occurs.
 			log.Fatalf("Running seed '%s', failed with error: %s", seed.Name, result.Error)
 		}
 	}

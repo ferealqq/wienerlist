@@ -156,16 +156,15 @@ func TestUpdateSectionHandler(t *testing.T) {
 	s := Section{
 		Title:       "Update test section",
 		Description: "Updated description",
-		BoardId:     1,
 		Placement:   3,
 	}
 
 	b, _ := json.Marshal(s)
 
 	action := HttpTestAction[Section]{
-		Method: http.MethodPut,
+		Method: http.MethodPatch,
 		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
-			e.PUT("/sections/:id", ctrl.MakeHandler(ae, UpdateSectionHandler))
+			e.PATCH("/sections/:id", ctrl.MakeHandler(ae, UpdateSectionHandler))
 		},
 		ReqPath: "/sections/1",
 		Body:    bytes.NewReader(b),
@@ -185,11 +184,10 @@ func TestUpdateSectionHandler(t *testing.T) {
 	var section Section
 
 	assert.Nil(t, database.DBConn.First(&section, 1).Error)
-
-	assert.Equal(t, section.Title, responseSection["Title"], "they should be equal")
-	assert.Equal(t, section.Description, responseSection["Description"], "they should be equal")
-	assert.Equal(t, int(section.BoardId), int(responseSection["BoardId"].(float64)), "they should be equal")
-	assert.Equal(t, int(section.Placement), int(responseSection["Placement"].(float64)), "they should be equal")
+	assert.Equal(t, section.Title, s.Title, "they should be equal")
+	assert.Equal(t, section.Description, s.Description, "they should be equal")
+	assert.Equal(t, section.Placement, s.Placement, "they should be equal")
+	assert.NotNil(t, section.BoardId, "they should not be nil")
 }
 
 func TestDeleteSectionHandler(t *testing.T) {

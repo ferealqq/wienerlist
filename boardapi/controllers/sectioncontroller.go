@@ -64,15 +64,8 @@ func UpdateSectionHandler(base ctrl.BaseController[models.Section]) {
 	if uriId, err := base.GetUriId(); err == nil {
 		var s models.Section
 		if err := base.GetPostModel(&s); err == nil {
-			section := models.Section{
-				ID:          uriId,
-				Title:       s.Title,
-				Description: s.Description,
-				BoardId:     s.BoardId,
-			}
-
-			if err := base.DB.Model(&section).Updates(&section).Error; err == nil {
-				base.SendJSON(http.StatusOK, section)
+			if err := base.DB.Model(&s).Where("id = ?", uriId).Updates(&s).Error; err == nil {
+				base.SendJSON(http.StatusOK, nil)
 			} else {
 				base.SendInternalServerError("Error updating section", err)
 			}

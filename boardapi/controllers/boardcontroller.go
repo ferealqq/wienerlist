@@ -40,7 +40,7 @@ func ListBoardsHandler(baseController ctrl.BaseController[models.Board]) {
 }
 
 func CreateBoardHandler(baseController ctrl.BaseController[models.Board]) {
-	// TODO Validation
+	// TODO Validation?
 	var b models.Board
 	if err := baseController.GetPostModel(&b); err == nil {
 		board := models.Board{
@@ -80,18 +80,12 @@ func UpdateBoardHandler(baseController ctrl.BaseController[models.Board]) {
 		// TODO this should be a reusable function, used twice in this file
 		var b models.Board
 		if err := baseController.GetPostModel(&b); err == nil {
-			board := models.Board{
-				ID:          uint(bid),
-				Title:       b.Title,
-				Description: b.Description,
-			}
-
-			if err = baseController.DB.Model(&board).Updates(&board).Error; err != nil {
+			if err = baseController.DB.Model(&models.Board{}).Where("id = ?", bid).Updates(&b).Error; err != nil {
 				baseController.SendInternalServerError("Error updating board", err)
 				return
 			}
-
-			baseController.SendJSON(http.StatusOK, board)
+			// Empty ok
+			baseController.SendJSON(http.StatusOK, nil)
 		}
 	}
 }

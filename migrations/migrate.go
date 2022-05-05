@@ -48,6 +48,7 @@ func MigrateSeedAfterwards(db *gorm.DB) {
 			TableInterface: &m.Item{},
 		},
 	}
+	// FIXME should not panic, throw error instead
 	if err := Migrate(db); err == nil && HasAllTables(db, list.tableInterfaces()...) {
 		for _, table := range list {
 			if err := db.First(table.TableInterface).Error; errors.Is(err, gorm.ErrRecordNotFound) {
