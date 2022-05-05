@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"testing"
@@ -55,14 +54,20 @@ func TestListSectionsHandlerFromBoard(t *testing.T) {
 		Seeders: []func(db *gorm.DB){SeedSections},
 		Tables:  []string{},
 	}
+	w := CreateWorkspaceFaker(database.DBConn).Model
 	b1 := Board{
 		Title:       "Only this boards sections will be listed",
 		Description: "This is a test board",
+		WorkspaceId: w.ID,
 	}
 	database.DBConn.Create(&b1)
 	CreateSection(database.DBConn, "Section one of results wanted", "this is a test section", b1.ID)
 	CreateSection(database.DBConn, "Section two of results wanted", "this is a test section", b1.ID)
-	b2 := Board{}
+	b2 := Board{
+		Title:       "Only this boards sections will be listed",
+		Description: "This is a test board",
+		WorkspaceId: w.ID,
+	}
 	database.DBConn.Create(&b2)
 	CreateSection(database.DBConn, "Section one of results wanted", "this is a test section", b2.ID)
 
@@ -108,8 +113,6 @@ func TestCreateSectionHandler(t *testing.T) {
 
 	var responseSection map[string]interface{}
 	if err := json.Unmarshal(response.Body.Bytes(), &responseSection); err != nil {
-		fmt.Print()
-		// panic(err)
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}

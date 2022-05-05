@@ -82,6 +82,7 @@ func TestPostBoardHandler(t *testing.T) {
 	board := Board{
 		Title:       "Test Board",
 		Description: "This is a test board",
+		WorkspaceId: 1,
 	}
 	b, _ := json.Marshal(board)
 
@@ -92,8 +93,8 @@ func TestPostBoardHandler(t *testing.T) {
 			e.POST("/boards", ctrl.MakeHandler(ae, CreateBoardHandler))
 		},
 		Body:    bytes.NewReader(b),
-		Seeders: []func(db *gorm.DB){SeedBoards},
-		Tables:  []string{"boards"},
+		Seeders: []func(db *gorm.DB){SeedWorkspaces, SeedBoards},
+		Tables:  []string{"boards", "workspaces"},
 	}
 
 	response := action.Run()
@@ -168,6 +169,7 @@ func TestUpdateBoardHandler(t *testing.T) {
 	board := Board{
 		Title:       "Title change",
 		Description: "Desc change",
+		WorkspaceId: 1,
 	}
 	// to io reader
 	b, _ := json.Marshal(board)
@@ -178,9 +180,11 @@ func TestUpdateBoardHandler(t *testing.T) {
 		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
 			e.PUT("/boards/:id", ctrl.MakeHandler(ae, UpdateBoardHandler))
 		},
-		Body:    bytes.NewReader(b),
-		Seeders: []func(db *gorm.DB){SeedBoards},
-		Tables:  []string{"boards"},
+		Body: bytes.NewReader(b),
+		Seeders: []func(db *gorm.DB){func(db *gorm.DB) {
+			CreateWorkspaceFaker(db)
+		}, SeedBoards},
+		Tables: []string{"boards"},
 	}
 	response := action.Run()
 
@@ -205,8 +209,10 @@ func TestPreloadGetBoard(t *testing.T) {
 			e.GET("/boards/:id", ctrl.MakeHandler(ae, GetBoardHandler))
 		},
 		ReqPath: "/boards/1",
-		Seeders: []func(db *gorm.DB){CreateBoardFaker, SeedSections},
-		Tables:  []string{"boards", "sections"},
+		Seeders: []func(db *gorm.DB){func(db *gorm.DB) {
+			CreateBoardFaker(db)
+		}, SeedSections},
+		Tables: []string{"boards", "sections"},
 	}
 	response := action.Run()
 

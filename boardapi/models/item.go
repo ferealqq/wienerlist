@@ -11,6 +11,7 @@ type Item struct {
 	Title       string `gorm:"not null"`
 	Description string
 	SectionId   uint `gorm:"not null"`
+	WorkspaceId uint `gorm:"not null"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

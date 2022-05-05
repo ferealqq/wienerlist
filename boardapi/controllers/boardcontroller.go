@@ -47,6 +47,7 @@ func CreateBoardHandler(baseController ctrl.BaseController[models.Board]) {
 			// FIXME: Couldn't we just give the b model to the model?
 			Title:       b.Title,
 			Description: b.Description,
+			WorkspaceId: b.WorkspaceId,
 		}
 		result := baseController.DB.Create(&board)
 		if result.Error != nil {

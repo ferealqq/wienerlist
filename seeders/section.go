@@ -1,56 +1,53 @@
 package seeders
 
 import (
-	"errors"
 	"log"
 
+	faker "github.com/bxcodec/faker/v3"
 	"github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/seed"
 	"gorm.io/gorm"
 )
 
-func CreateSection(db *gorm.DB, title string, desc string, BoardId uint) *gorm.DB {
-	return db.Create(&models.Section{
+func CreateSection(db *gorm.DB, title string, desc string, BoardId uint) *seed.SeedOut[models.Section] {
+	return seed.SeedModel(db, models.Section{
 		Title:       title,
 		Description: desc,
 		BoardId:     BoardId,
 	})
 }
 
-func SectionAll() []seed.Seed {
-	return []seed.Seed{
+func CreateSectionFaker(db *gorm.DB) *seed.SeedOut[models.Section] {
+	return CreateSection(db, faker.Word(), faker.Sentence(), CreateBoardFaker(db).Model.ID)
+}
+
+func CreateDefaultSections(db *gorm.DB, board uint) []models.Section {
+	var sections []models.Section
+	// FIXME there is no error handling at this point
+	sections = append(sections, CreateSection(db, "TODO", "task to do", board).Model)
+	sections = append(sections, CreateSection(db, "In Progress", "tasks that are in progress", board).Model)
+	sections = append(sections, CreateSection(db, "DONE", "tasks that have been completed", board).Model)
+	return sections
+}
+
+func SectionAll() []seed.Seed[[]models.Section] {
+	return []seed.Seed[[]models.Section]{
 		{
 			Name: "Three sections for board 1",
-			Run: func(db *gorm.DB) *gorm.DB {
+			Run: func(db *gorm.DB) *seed.SeedOut[[]models.Section] {
+				var sections []models.Section
 				var board models.Board
-				result := db.First(&board)
-				if result.Error == nil {
-					for i := 0; i < 3; i++ {
-						//FIXME Could be done with a batch insert but i'm lazy
-						res := CreateSection(db, "Section 1", "This is a section for the board", board.ID)
-						if res.Error != nil {
-							panic(res.Error)
-						}
-					}
-					return db
-				} else if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-					CreateBoard(db, "REST API development", "This is a board for the REST API development")
-					result := db.First(&board)
-					if result.Error == nil {
-						for i := 0; i < 3; i++ {
-							//FIXME Could be done with a batch insert but i'm lazy
-							res := CreateSection(db, "Section 1", "This is a section for the board", board.ID)
-							if res.Error != nil {
-								panic(res.Error)
-							}
-						}
-						return db
+				if err := db.First(&board).Error; err != nil {
+					bResult := CreateBoardFaker(db)
+					if bResult.Error != nil {
+						panic(bResult.Error)
 					} else {
-						panic(result.Error)
+						sections = CreateDefaultSections(db, bResult.Model.ID)
 					}
 				} else {
-					panic(result.Error)
+					sections = CreateDefaultSections(db, board.ID)
 				}
+				return &seed.SeedOut[[]models.Section]{Error: nil, Model: sections}
 			},
 		},
 	}
