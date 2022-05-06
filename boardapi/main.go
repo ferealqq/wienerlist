@@ -14,6 +14,7 @@ func StartServer(appEnv a.AppEnv) {
 	router := gin.Default()
 	BoardRouter(router, appEnv)
 	SectionRouter(router, appEnv)
+	ItemRouter(router, appEnv)
 	isDevelopment := appEnv.Env == "LOCAL"
 
 	if !isDevelopment {

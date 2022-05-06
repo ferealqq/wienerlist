@@ -35,7 +35,7 @@ func ItemRouter(router *gin.Engine, appEnv app.AppEnv) {
 		r.GET("/", controllers.MakeHandler(appEnv, ctrl.ListItemsHandler))
 		r.POST("/", controllers.MakeHandler(appEnv, ctrl.CreateItemHandler))
 		r.PATCH("/:id", controllers.MakeHandler(appEnv, ctrl.UpdateItemHandler))
-		// r.GET("/:id", controllers.MakeHandler(appEnv, ctrl.GetItemHandler))
-		// r.DELETE("/:id", controllers.MakeHandler(appEnv, ctrl.DeleteItemHandler))
+		r.GET("/:id", controllers.MakeHandler(appEnv, ctrl.GetItemHandler))
+		r.DELETE("/:id", controllers.MakeHandler(appEnv, ctrl.DeleteItemHandler))
 	}
 }

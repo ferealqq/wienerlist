@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 
 	models "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
+	"gorm.io/gorm"
 )
 
 func ListItemsHandler(base ctrl.BaseController[models.Item]) {
@@ -66,55 +68,33 @@ func UpdateItemHandler(base ctrl.BaseController[models.Item]) {
 	}
 }
 
-/*
-func GetSectionHandler(base ctrl.BaseController[models.Section]) {
+func GetItemHandler(base ctrl.BaseController[models.Item]) {
 	if uriId, err := base.GetUriId(); err == nil {
-		var s models.Section
-		if err := base.DB.First(&s, uriId).Error; err == nil {
-			base.SendJSON(http.StatusOK, s)
+		var i models.Item
+		if err := base.DB.First(&i, uriId).Error; err == nil {
+			base.SendJSON(http.StatusOK, i)
 		} else if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-			base.SendNotFound("Section not found")
+			base.SendNotFound("Item not found")
 		} else {
-			base.SendInternalServerError("Error getting section", err)
+			base.SendInternalServerError("Error getting item", err)
 		}
 	}
 }
 
-func UpdateSectionHandler(base ctrl.BaseController[models.Section]) {
+func DeleteItemHandler(base ctrl.BaseController[models.Item]) {
 	if uriId, err := base.GetUriId(); err == nil {
-		var s models.Section
-		if err := base.GetPostModel(&s); err == nil {
-			section := models.Section{
-				ID:          uriId,
-				Title:       s.Title,
-				Description: s.Description,
-				BoardId:     s.BoardId,
-			}
-
-			if err := base.DB.Model(&section).Updates(&section).Error; err == nil {
-				base.SendJSON(http.StatusOK, section)
-			} else {
-				base.SendInternalServerError("Error updating section", err)
-			}
-		}
-	}
-}
-
-func DeleteSectionHandler(base ctrl.BaseController[models.Section]) {
-	if uriId, err := base.GetUriId(); err == nil {
-		var section models.Section
-		result := base.DB.Delete(&section, uriId)
+		var item models.Item
+		result := base.DB.Delete(&item, uriId)
 		if result.Error != nil {
-			base.SendInternalServerError("Error getting section", result.Error)
+			base.SendInternalServerError("Error getting item", result.Error)
 			return
 		}
 
 		if result.RowsAffected == 0 {
-			base.SendNotFound("Section not found")
+			base.SendNotFound("Item not found")
 			return
 		}
 
-		base.SendJSON(http.StatusOK, section)
+		base.SendJSON(http.StatusOK, nil)
 	}
 }
-*/
