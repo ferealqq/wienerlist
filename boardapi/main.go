@@ -12,6 +12,7 @@ import (
 // StartServer Wraps the mux Router and uses the Negroni Middleware
 func StartServer(appEnv a.AppEnv) {
 	router := gin.Default()
+	WorkspaceRouter(router, appEnv)
 	BoardRouter(router, appEnv)
 	SectionRouter(router, appEnv)
 	ItemRouter(router, appEnv)

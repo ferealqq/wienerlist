@@ -7,6 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func WorkspaceRouter(router *gin.Engine, appEnv app.AppEnv) {
+	r := router.Group("/workspaces")
+	{
+		r.GET("/", controllers.MakeHandler(appEnv, ctrl.ListWorkspacesHandler))
+		r.POST("/", controllers.MakeHandler(appEnv, ctrl.CreateWorkspaceHandler))
+		r.GET("/:id", controllers.MakeHandler(appEnv, ctrl.GetWorkspaceHandler))
+		r.PATCH("/:id", controllers.MakeHandler(appEnv, ctrl.UpdateWorkspaceHandler))
+		r.DELETE("/:id", controllers.MakeHandler(appEnv, ctrl.DeleteWorkspaceHandler))
+	}
+}
+
 func BoardRouter(router *gin.Engine, appEnv app.AppEnv) {
 	r := router.Group("/boards")
 	{
