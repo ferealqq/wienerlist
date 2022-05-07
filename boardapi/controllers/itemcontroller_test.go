@@ -3,7 +3,10 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"testing"
 
 	. "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
@@ -43,37 +46,37 @@ func TestListItemsHandler(t *testing.T) {
 	assert.Equal(t, int(count), int(d["count"].(float64)), "they should be equal")
 }
 
-/**
-func TestListSectionsHandlerFromBoard(t *testing.T) {
+func TestListItemsHandlerFromWorkspaceAndSection(t *testing.T) {
 	action := HttpTestAction[Board]{
 		Method: http.MethodGet,
 		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
-			e.GET("/sections", ctrl.MakeHandler(ae, ListSectionsHandler))
+			e.GET("/items", ctrl.MakeHandler(ae, ListItemsHandler))
 		},
-		Seeders: []func(db *gorm.DB){SeedSections},
+		Seeders: []func(db *gorm.DB){},
 		Tables:  []string{},
 	}
 	w := CreateWorkspaceFaker(database.DBConn).Model
-	b1 := Board{
+	b := Board{
 		Title:       "Only this boards sections will be listed",
 		Description: "This is a test board",
 		WorkspaceId: w.ID,
 	}
-	database.DBConn.Create(&b1)
-	CreateSection(database.DBConn, "Section one of results wanted", "this is a test section", b1.ID)
-	CreateSection(database.DBConn, "Section two of results wanted", "this is a test section", b1.ID)
-	b2 := Board{
-		Title:       "Only this boards sections will be listed",
-		Description: "This is a test board",
-		WorkspaceId: w.ID,
+	database.DBConn.Create(&b)
+	s := CreateSection(database.DBConn, "Section one of results wanted", "this is a test section", b.ID).Model
+	s1 := CreateSection(database.DBConn, "Section two of results wanted", "this is a test section", b.ID).Model
+	for i := 0; i < 6; i++ {
+		if i%2 == 0 {
+			CreateItem(database.DBConn, "This should not be returned with GET /items", "item for section description", w.ID, s1.ID)
+		} else {
+			fmt.Println("creating item")
+			CreateItem(database.DBConn, "This should be found with GET /items", "item for section description", w.ID, s.ID)
+		}
 	}
-	database.DBConn.Create(&b2)
-	CreateSection(database.DBConn, "Section one of results wanted", "this is a test section", b2.ID)
 
 	// Query with multiple board ids
-	action.ReqPath = "/sections?BoardId=" +
-		strconv.FormatUint(uint64(b1.ID), 10) + "&BoardId=" +
-		strconv.FormatUint(uint64(b2.ID), 10)
+	action.ReqPath = "/items?WorkspaceId=" +
+		strconv.FormatUint(uint64(w.ID), 10) + "&SectionId=" +
+		strconv.FormatUint(uint64(s.ID), 10)
 
 	response := action.Run()
 	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
@@ -85,7 +88,6 @@ func TestListSectionsHandlerFromBoard(t *testing.T) {
 	}
 	assert.Equal(t, 3, int(d["count"].(float64)), "they should be equal")
 }
-*/
 
 func TestPatchItemHandler(t *testing.T) {
 	// BoardId 1 is created by SeedSections function, by default if there is no board in the database SeedSections will create a new board
@@ -126,4 +128,89 @@ func TestPatchItemHandler(t *testing.T) {
 	assert.NotNil(t, item.Description, "should not be nil")
 	assert.NotNil(t, item.WorkspaceId, "should not be nil")
 	assert.NotNil(t, item.UpdatedAt, "should not be nil")
+}
+
+func TestCreateItemHandler(t *testing.T) {
+	i := Item{
+		Title:       "This is a new item",
+		Description: "This is a description for the new item that is about to be created",
+		WorkspaceId: 1,
+		SectionId:   1,
+	}
+	b, _ := json.Marshal(i)
+
+	action := HttpTestAction[Item]{
+		Method: http.MethodPost,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.POST("/items", ctrl.MakeHandler(ae, CreateItemHandler))
+		},
+		ReqPath: "/items",
+		Body:    bytes.NewReader(b),
+		Seeders: []func(db *gorm.DB){SeedItems},
+		Tables:  []string{"items"},
+	}
+
+	response := action.Run()
+
+	assert.Equal(t, http.StatusCreated, response.Code, "they should be equal")
+
+	var rItem map[string]interface{}
+	if err := json.Unmarshal(response.Body.Bytes(), &rItem); err != nil {
+		assert.Fail(t, "Unmarshal should not fail")
+		return
+	}
+	var item Item
+	err := database.DBConn.First(&item, rItem["ID"]).Error
+	if err != nil {
+		assert.Fail(t, "Fetching section should not fail")
+	}
+}
+
+func TestGetItemHandler(t *testing.T) {
+	action := HttpTestAction[Section]{
+		Method: http.MethodGet,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.GET("/items/:id", ctrl.MakeHandler(ae, GetItemHandler))
+		},
+		ReqPath: "/items/1",
+		Seeders: []func(db *gorm.DB){SeedItems},
+		Tables:  []string{"items"},
+	}
+	response := action.Run()
+	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
+	var d map[string]interface{}
+
+	if err := json.Unmarshal(response.Body.Bytes(), &d); err != nil {
+		assert.Fail(t, "Unmarshal should not fail")
+		return
+	}
+	var item Item
+	err := database.DBConn.First(&item, d["ID"]).Error
+	if err != nil {
+		assert.Fail(t, "Fetching item should not fail")
+	}
+
+	assert.Equal(t, item.Title, d["Title"], "they should be equal")
+	assert.Equal(t, item.Description, d["Description"], "they should be equal")
+	assert.Equal(t, int(item.SectionId), int(d["SectionId"].(float64)), "they should be equal")
+	assert.Equal(t, int(item.WorkspaceId), int(d["WorkspaceId"].(float64)), "they should be equal")
+}
+
+func TestDeleteItemHandler(t *testing.T) {
+	action := HttpTestAction[Section]{
+		Method: http.MethodDelete,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.DELETE("/items/:id", ctrl.MakeHandler(ae, DeleteItemHandler))
+		},
+		ReqPath: "/items/1",
+		Seeders: []func(db *gorm.DB){SeedItems},
+		Tables:  []string{"items"},
+	}
+
+	response := action.Run()
+
+	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
+
+	var item Item
+	assert.True(t, errors.Is(database.DBConn.First(&item, 1).Error, gorm.ErrRecordNotFound), "they should be equal")
 }

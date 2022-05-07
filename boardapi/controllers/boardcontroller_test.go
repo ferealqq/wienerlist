@@ -42,8 +42,8 @@ func TestListBoardsHandler(t *testing.T) {
 			e.GET("/boards", ctrl.MakeHandler(ae, ListBoardsHandler))
 		},
 		ReqPath: "/boards",
-		Seeders: []func(db *gorm.DB){SeedBoards},
-		Tables:  []string{"boards"},
+		Seeders: []func(db *gorm.DB){SeedWorkspaces, SeedBoards},
+		Tables:  []string{"workspaces", "boards"},
 	}
 	response := action.Run()
 	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
