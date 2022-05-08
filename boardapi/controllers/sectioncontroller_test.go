@@ -117,7 +117,7 @@ func TestCreateSectionHandler(t *testing.T) {
 		return
 	}
 	var section Section
-	err := database.DBConn.First(&section, responseSection["ID"]).Error
+	err := database.DBConn.First(&section, responseSection["id"]).Error
 	if err != nil {
 		assert.Fail(t, "Fetching section should not fail")
 	}
@@ -142,14 +142,14 @@ func TestGetSectionHandler(t *testing.T) {
 		return
 	}
 	var section Section
-	err := database.DBConn.First(&section, d["ID"]).Error
+	err := database.DBConn.First(&section, d["id"]).Error
 	if err != nil {
 		assert.Fail(t, "Fetching section should not fail")
 	}
 
-	assert.Equal(t, section.Title, d["Title"], "they should be equal")
-	assert.Equal(t, section.Description, d["Description"], "they should be equal")
-	assert.Equal(t, int(section.BoardId), int(d["BoardId"].(float64)), "they should be equal")
+	assert.Equal(t, section.Title, d["title"], "they should be equal")
+	assert.Equal(t, section.Description, d["description"], "they should be equal")
+	assert.Equal(t, int(section.BoardId), int(d["board_id"].(float64)), "they should be equal")
 }
 
 func TestUpdateSectionHandler(t *testing.T) {

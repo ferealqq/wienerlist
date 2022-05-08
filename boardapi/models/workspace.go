@@ -7,13 +7,13 @@ import (
 
 // Database model for board
 type Workspace struct {
-	ID          uint   `gorm:"primary_key"`
-	Title       string `gorm:"not null"`
-	Description string
-	Boards      []Board `gorm:"foreignkey:WorkspaceId"`
-	Items       []Item  `gorm:"foreignkey:WorkspaceId"` // Needed for later usage of TODO cli feature
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint      `gorm:"primary_key" json:"id"`
+	Title       string    `gorm:"not null" json:"title"`
+	Description string    `json:"description"`
+	Boards      []Board   `gorm:"foreignkey:WorkspaceId" json:"boards"`
+	Items       []Item    `gorm:"foreignkey:WorkspaceId" json:"items"` // Needed for later usage of TODO cli feature
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // GoString implements the GoStringer interface so we can display the full struct during debugging

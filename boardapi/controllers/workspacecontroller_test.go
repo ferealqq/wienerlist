@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -91,9 +90,9 @@ func TestPostWorkspaceHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	if assert.Equal(t, wspace.ID, uint(d["ID"].(float64)), "they should be equal") {
-		assert.Equal(t, wspace.Title, d["Title"], "they should be equal")
-		assert.Equal(t, wspace.Description, d["Description"], "they should be equal")
+	if assert.Equal(t, wspace.ID, uint(d["id"].(float64)), "they should be equal") {
+		assert.Equal(t, wspace.Title, d["title"], "they should be equal")
+		assert.Equal(t, wspace.Description, d["description"], "they should be equal")
 	}
 }
 
@@ -122,7 +121,7 @@ func TestDeleteWorkspaceHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(0), int(d["ID"].(float64)), "they should be equal")
+	assert.Equal(t, int(0), int(d["id"].(float64)), "they should be equal")
 }
 
 func TestGetWorkspaceHandler(t *testing.T) {
@@ -147,7 +146,7 @@ func TestGetWorkspaceHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
+	assert.Equal(t, int(1), int(d["id"].(float64)), "they should be equal")
 }
 
 func TestUpdateWorkspaceHandler(t *testing.T) {
@@ -179,8 +178,6 @@ func TestUpdateWorkspaceHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	fmt.Println("From db title")
-	fmt.Println(w.Title)
 	assert.Equal(t, w.ID, uint(1), "they should be equal")
 	assert.Equal(t, w.Title, wspace.Title, "they should be equal")
 	assert.NotNil(t, w.Description, "they should be equal")
@@ -216,7 +213,6 @@ func TestPreloadGetWorkspace(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	fmt.Println(d)
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
-	assert.Equal(t, len(w.Boards), len(d["Boards"].([]interface{})), "they should be equal")
+	assert.Equal(t, int(1), int(d["id"].(float64)), "they should be equal")
+	assert.Equal(t, len(w.Boards), len(d["boards"].([]interface{})), "they should be equal")
 }

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	models "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
@@ -66,9 +65,7 @@ func UpdateWorkspaceHandler(base ctrl.BaseController[models.Workspace]) {
 	if bid, err := base.GetUriId(); err == nil {
 		// TODO this should be a reusable function, used twice in this file
 		var w models.Workspace
-		fmt.Println("from patch the model")
 		if err := base.GetPostModel(&w); err == nil {
-			fmt.Println(w)
 			if err = base.DB.Model(&models.Workspace{}).Where("id = ?", bid).Updates(&w).Error; err != nil {
 				base.SendInternalServerError("Error updating workspace", err)
 				return

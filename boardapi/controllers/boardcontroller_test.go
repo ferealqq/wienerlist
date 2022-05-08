@@ -108,9 +108,9 @@ func TestPostBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	if assert.Equal(t, len(boards), int(d["ID"].(float64)), "they should be equal") {
-		assert.Equal(t, board.Title, d["Title"], "they should be equal")
-		assert.Equal(t, board.Description, d["Description"], "they should be equal")
+	if assert.Equal(t, len(boards), int(d["id"].(float64)), "they should be equal") {
+		assert.Equal(t, board.Title, d["title"], "they should be equal")
+		assert.Equal(t, board.Description, d["description"], "they should be equal")
 	}
 }
 
@@ -136,7 +136,7 @@ func TestDeleteBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(0), int(d["ID"].(float64)), "they should be equal")
+	assert.Equal(t, int(0), int(d["id"].(float64)), "they should be equal")
 }
 
 func TestGetBoardHandler(t *testing.T) {
@@ -161,7 +161,7 @@ func TestGetBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
+	assert.Equal(t, int(1), int(d["id"].(float64)), "they should be equal")
 }
 
 func TestUpdateBoardHandler(t *testing.T) {
@@ -228,6 +228,6 @@ func TestPreloadGetBoard(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
-	assert.Equal(t, len(board.Sections), len(d["Sections"].([]interface{})), "they should be equal")
+	assert.Equal(t, int(1), int(d["id"].(float64)), "they should be equal")
+	assert.Equal(t, len(board.Sections), len(d["sections"].([]interface{})), "they should be equal")
 }

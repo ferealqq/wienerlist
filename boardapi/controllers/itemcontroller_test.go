@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"testing"
@@ -68,7 +67,6 @@ func TestListItemsHandlerFromWorkspaceAndSection(t *testing.T) {
 		if i%2 == 0 {
 			CreateItem(database.DBConn, "This should not be returned with GET /items", "item for section description", w.ID, s1.ID)
 		} else {
-			fmt.Println("creating item")
 			CreateItem(database.DBConn, "This should be found with GET /items", "item for section description", w.ID, s.ID)
 		}
 	}
@@ -160,7 +158,7 @@ func TestCreateItemHandler(t *testing.T) {
 		return
 	}
 	var item Item
-	err := database.DBConn.First(&item, rItem["ID"]).Error
+	err := database.DBConn.First(&item, rItem["id"]).Error
 	if err != nil {
 		assert.Fail(t, "Fetching section should not fail")
 	}
@@ -185,15 +183,15 @@ func TestGetItemHandler(t *testing.T) {
 		return
 	}
 	var item Item
-	err := database.DBConn.First(&item, d["ID"]).Error
+	err := database.DBConn.First(&item, d["id"]).Error
 	if err != nil {
 		assert.Fail(t, "Fetching item should not fail")
 	}
 
-	assert.Equal(t, item.Title, d["Title"], "they should be equal")
-	assert.Equal(t, item.Description, d["Description"], "they should be equal")
-	assert.Equal(t, int(item.SectionId), int(d["SectionId"].(float64)), "they should be equal")
-	assert.Equal(t, int(item.WorkspaceId), int(d["WorkspaceId"].(float64)), "they should be equal")
+	assert.Equal(t, item.Title, d["title"], "they should be equal")
+	assert.Equal(t, item.Description, d["description"], "they should be equal")
+	assert.Equal(t, int(item.SectionId), int(d["section_id"].(float64)), "they should be equal")
+	assert.Equal(t, int(item.WorkspaceId), int(d["workspace_id"].(float64)), "they should be equal")
 }
 
 func TestDeleteItemHandler(t *testing.T) {

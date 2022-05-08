@@ -7,13 +7,13 @@ import (
 
 // Database model for board
 type Board struct {
-	ID          uint   `gorm:"primary_key"`
-	Title       string `gorm:"not null"`
-	Description string
-	WorkspaceId uint      `gorm:"not null"`
-	Sections    []Section `gorm:"foreignkey:BoardId"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint      `gorm:"primary_key" json:"id"`
+	Title       string    `gorm:"not null" json:"title"`
+	Description string    `json:"description"`
+	WorkspaceId uint      `gorm:"not null" json:"workspace_id"`
+	Sections    []Section `gorm:"foreignkey:BoardId" json:"sections"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // GoString implements the GoStringer interface so we can display the full struct during debugging
