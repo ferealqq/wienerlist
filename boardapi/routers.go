@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func WorkspaceRouter(router *gin.Engine, appEnv app.AppEnv) {
+func WorkspaceRouter(router *gin.RouterGroup, appEnv app.AppEnv) {
 	r := router.Group("/workspaces")
 	{
 		r.GET("/", controllers.MakeHandler(appEnv, ctrl.ListWorkspacesHandler))
@@ -18,7 +18,7 @@ func WorkspaceRouter(router *gin.Engine, appEnv app.AppEnv) {
 	}
 }
 
-func BoardRouter(router *gin.Engine, appEnv app.AppEnv) {
+func BoardRouter(router *gin.RouterGroup, appEnv app.AppEnv) {
 	r := router.Group("/boards")
 	{
 		r.GET("/", controllers.MakeHandler(appEnv, ctrl.ListBoardsHandler))
@@ -29,7 +29,7 @@ func BoardRouter(router *gin.Engine, appEnv app.AppEnv) {
 	}
 }
 
-func SectionRouter(router *gin.Engine, appEnv app.AppEnv) {
+func SectionRouter(router *gin.RouterGroup, appEnv app.AppEnv) {
 	r := router.Group("/sections")
 	{
 		r.GET("/", controllers.MakeHandler(appEnv, ctrl.ListSectionsHandler))
@@ -40,7 +40,7 @@ func SectionRouter(router *gin.Engine, appEnv app.AppEnv) {
 	}
 }
 
-func ItemRouter(router *gin.Engine, appEnv app.AppEnv) {
+func ItemRouter(router *gin.RouterGroup, appEnv app.AppEnv) {
 	r := router.Group("/items")
 	{
 		r.GET("/", controllers.MakeHandler(appEnv, ctrl.ListItemsHandler))

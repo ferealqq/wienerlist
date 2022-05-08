@@ -4,11 +4,12 @@ go 1.18
 
 require (
 	github.com/bxcodec/faker/v3 v3.8.0
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.7.0
-	github.com/unrolled/secure v1.0.8
+	github.com/unrolled/secure v1.10.0
 	github.com/urfave/negroni v1.0.0
 	gorm.io/driver/postgres v1.3.5
 	gorm.io/gorm v1.23.4
