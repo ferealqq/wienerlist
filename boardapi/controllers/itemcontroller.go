@@ -15,11 +15,11 @@ func ListItemsHandler(base ctrl.BaseController[models.Item]) {
 		Limit(base.DefaultQueryInt("limit", 100)).
 		Offset(base.DefaultQueryInt("skip", 0))
 
-	if wsIds, success := base.Context.GetQueryArray("WorkspaceId"); success {
+	if wsIds, success := base.Context.GetQueryArray("workspace_id"); success {
 		result.Where("workspace_id IN ?", wsIds)
 	}
 
-	if sectionIds, success := base.Context.GetQueryArray("SectionId"); success {
+	if sectionIds, success := base.Context.GetQueryArray("section_id"); success {
 		result.Where("section_id IN ?", sectionIds)
 	}
 

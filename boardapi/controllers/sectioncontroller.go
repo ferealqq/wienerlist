@@ -12,10 +12,10 @@ import (
 func ListSectionsHandler(base ctrl.BaseController[models.Section]) {
 	var sections []models.Section
 	result := base.DB.
+		Preload("Items").
 		Limit(base.DefaultQueryInt("limit", 100)).
 		Offset(base.DefaultQueryInt("skip", 0))
-
-	if boardIds, success := base.Context.GetQueryArray("BoardId"); success {
+	if boardIds, success := base.Context.GetQueryArray("board_id"); success {
 		result.Where("board_id IN ?", boardIds)
 	}
 	result = result.Find(&sections)

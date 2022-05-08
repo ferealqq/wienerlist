@@ -72,8 +72,8 @@ func TestListSectionsHandlerFromBoard(t *testing.T) {
 	CreateSection(database.DBConn, "Section one of results wanted", "this is a test section", b2.ID)
 
 	// Query with multiple board ids
-	action.ReqPath = "/sections?BoardId=" +
-		strconv.FormatUint(uint64(b1.ID), 10) + "&BoardId=" +
+	action.ReqPath = "/sections?board_id=" +
+		strconv.FormatUint(uint64(b1.ID), 10) + "&board_id=" +
 		strconv.FormatUint(uint64(b2.ID), 10)
 
 	response := action.Run()

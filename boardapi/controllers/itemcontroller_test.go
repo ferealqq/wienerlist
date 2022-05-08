@@ -72,8 +72,8 @@ func TestListItemsHandlerFromWorkspaceAndSection(t *testing.T) {
 	}
 
 	// Query with multiple board ids
-	action.ReqPath = "/items?WorkspaceId=" +
-		strconv.FormatUint(uint64(w.ID), 10) + "&SectionId=" +
+	action.ReqPath = "/items?workspace_id=" +
+		strconv.FormatUint(uint64(w.ID), 10) + "&section_id=" +
 		strconv.FormatUint(uint64(s.ID), 10)
 
 	response := action.Run()
