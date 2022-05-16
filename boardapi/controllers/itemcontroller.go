@@ -13,7 +13,8 @@ func ListItemsHandler(base ctrl.BaseController[models.Item]) {
 	var items []models.Item
 	result := base.DB.
 		Limit(base.DefaultQueryInt("limit", 100)).
-		Offset(base.DefaultQueryInt("skip", 0))
+		Offset(base.DefaultQueryInt("skip", 0)).
+		Order(base.Context.DefaultQuery("order", "id desc"))
 
 	if wsIds, success := base.Context.GetQueryArray("workspace_id"); success {
 		result.Where("workspace_id IN ?", wsIds)

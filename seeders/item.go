@@ -47,7 +47,6 @@ func fiveItemsFor(db *gorm.DB, sectionId uint, workspaceId uint) ([]models.Item,
 	if err := db.First(&section, sectionId).Error; err != nil {
 		section = CreateSectionFaker(db).Model
 	}
-
 	for i := 0; i < 5; i++ {
 		r := CreateItem(db, faker.Word(), faker.Sentence(), workspace.ID, section.ID)
 		items = append(items, r.Model)

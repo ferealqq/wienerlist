@@ -12,9 +12,13 @@ import (
 func ListSectionsHandler(base ctrl.BaseController[models.Section]) {
 	var sections []models.Section
 	result := base.DB.
-		Preload("Items").
+		Preload("Items", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id asc")
+		}).
 		Limit(base.DefaultQueryInt("limit", 100)).
-		Offset(base.DefaultQueryInt("skip", 0))
+		Offset(base.DefaultQueryInt("skip", 0)).
+		Order(base.Context.DefaultQuery("order", "placement,id asc"))
+
 	if boardIds, success := base.Context.GetQueryArray("board_id"); success {
 		result.Where("board_id IN ?", boardIds)
 	}

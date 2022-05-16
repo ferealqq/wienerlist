@@ -7,8 +7,9 @@ import (
 
 // Database model for item
 type Item struct {
-	ID          uint      `gorm:"primary_key" json:"id"`
-	Title       string    `gorm:"not null" json:"title"`
+	ID    uint   `gorm:"primary_key" json:"id"`
+	Title string `gorm:"not null" json:"title"`
+	//TODO Placement?
 	Description string    `json:"description"`
 	SectionId   uint      `gorm:"not null" json:"section_id"`
 	WorkspaceId uint      `gorm:"not null" json:"workspace_id"`
