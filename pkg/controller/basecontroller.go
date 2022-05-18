@@ -21,21 +21,21 @@ type BaseController[M interface{}] struct {
 	Context *gin.Context
 }
 
-func (a *BaseController[M]) SendJSON(status int, json interface{}) {
-	a.Context.JSON(status, json)
+func (b *BaseController[M]) SendJSON(status int, json interface{}) {
+	b.Context.JSON(status, json)
 }
 
-func (a *BaseController[M]) SendInternalServerError(message string, err error) {
+func (b *BaseController[M]) SendInternalServerError(message string, err error) {
 	log.WithFields(log.Fields{
-		"env":    a.AppEnv.Env,
+		"env":    b.AppEnv.Env,
 		"status": http.StatusInternalServerError,
 		"error":  err,
 	}).Error(message)
-	a.SendJSON(http.StatusInternalServerError, gin.H{"message": message})
+	b.SendJSON(http.StatusInternalServerError, gin.H{"message": message})
 }
 
-func (a *BaseController[M]) SendNotFound(message string) {
-	a.SendJSON(http.StatusNotFound, status.Response{
+func (b *BaseController[M]) SendNotFound(message string) {
+	b.SendJSON(http.StatusNotFound, status.Response{
 		Status:  strconv.Itoa(http.StatusNotFound),
 		Message: message,
 	})
