@@ -15,7 +15,7 @@ services:
       - board_db
     build:
       context: ./
-      dockerfile: Dockerfile.web
+      dockerfile: Dockerfile
     environment:
       DB_DSN: "host=board_db user=postgres password=postgres dbname=BOARD port=5432 sslmode=disable TimeZone=Asia/Shanghai"
     ports:

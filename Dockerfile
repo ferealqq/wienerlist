@@ -1,16 +1,18 @@
-# syntax=docker/dockerfile:1
-
-FROM golang:1.17-alpine
+FROM golang:1.18-alpine as build
 
 WORKDIR /app
 
 COPY . ./
 RUN go mod download
 
-RUN go build .
+RUN CGO_ENABLED=0 go build -ldflags "-s -w" -o server
+
+FROM scratch as runner 
+COPY --from=build /app/server /opt/app/server
+COPY --from=build /app/VERSION /opt/app/VERSION
 
 ENV ENV=PRD
-ENV VERSION=/app/VERSION
+ENV VERSION=/opt/app/VERSION
 ENV PORT=3000
 ENV GIN_MODE=release
 # DB_DSN env is set in heroku for production. 
@@ -18,4 +20,4 @@ ENV GIN_MODE=release
 
 EXPOSE 3000
 
-CMD [ "/app/server" ]
+CMD [ "/opt/app/server" ]
