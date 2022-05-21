@@ -11,7 +11,7 @@ import (
 func Migrate(db *gorm.DB) error {
 	// FIXME: not sure should we open & close the db connection here.
 	// Is it a antipattern to be constantly closing db connections?
-	return db.AutoMigrate(&m.Board{}, &m.Section{})
+	return db.AutoMigrate(&m.Workspace{}, &m.Board{}, &m.Section{}, &m.Item{})
 }
 
 type TableToHandle struct {
@@ -32,6 +32,10 @@ func (tables TablesToHandle) tableInterfaces() []interface{} {
 func MigrateSeedAfterwards(db *gorm.DB) {
 	list := TablesToHandle{
 		{
+			SeederFunc:     s.SeedWorkspaces,
+			TableInterface: &m.Workspace{},
+		},
+		{
 			SeederFunc:     s.SeedBoards,
 			TableInterface: &m.Board{},
 		},
@@ -39,7 +43,12 @@ func MigrateSeedAfterwards(db *gorm.DB) {
 			SeederFunc:     s.SeedSections,
 			TableInterface: &m.Section{},
 		},
+		{
+			SeederFunc:     s.SeedItems,
+			TableInterface: &m.Item{},
+		},
 	}
+	// FIXME should not panic, throw error instead
 	if err := Migrate(db); err == nil && HasAllTables(db, list.tableInterfaces()...) {
 		for _, table := range list {
 			if err := db.First(table.TableInterface).Error; errors.Is(err, gorm.ErrRecordNotFound) {
@@ -54,7 +63,6 @@ func MigrateSeedAfterwards(db *gorm.DB) {
 func HasAllTables(db *gorm.DB, list ...interface{}) bool {
 	// list of interfaces struct
 	for _, table := range list {
-		db.Migrator()
 		if !db.Migrator().HasTable(table) {
 			return false
 		}

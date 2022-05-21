@@ -1,61 +1,51 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"os"
 	"testing"
 
+	. "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
+	"github.com/ferealqq/golang-trello-copy/server/migrations"
 	app "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
 	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
+	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
+	. "github.com/ferealqq/golang-trello-copy/server/pkg/testing"
+	. "github.com/ferealqq/golang-trello-copy/server/seeders"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
+
+func TestMain(m *testing.M) {
+	database.TestDBInit()
+	// stop execution if migrations fail because tests won't be able to run
+	if err := migrations.Migrate(database.DBConn); err != nil {
+		panic(err)
+	}
+	exitVal := m.Run()
+	defer database.Close()
+	os.Exit(exitVal)
+}
 
 func TestMakeHandler(t *testing.T) {
 	appenv := app.CreateTestAppEnv()
 	assert.NotNil(t, ctrl.MakeHandler(appenv, GetBoardHandler))
 }
 
-/**
-type TestAction struct {
-	Name       string
-	RouterPath string
-	ReqPath    string
-	Handler    func(http.ResponseWriter, *http.Request, AppEnv)
-	Method     string
-	Body       io.Reader
-	Seeders    []func(db *gorm.DB)
-	Tables     []string
-}
-
-// FIXME create test "suite" so you can use multiple database connections
-func BoardHandlerAction(action TestAction) *httptest.ResponseRecorder {
-	appEnv := CreateContextForTestSetup()
-	//FIXME figure out a better way to give out the table name, table names could change so this is a little problematic approach
-	ReinitTables(appEnv.DBConn, action.Tables, action.Seeders)
-	r, _ := http.NewRequest(action.Method, action.ReqPath, action.Body)
-	w := httptest.NewRecorder()
-	router := mux.NewRouter().StrictSlash(true)
-	// recreate route from routes.go
-	router.
-		Methods(action.Method).
-		Path(action.RouterPath).
-		Name(action.Name).
-		Handler(MakeHandler(appEnv, action.Handler))
-	n := negroni.New()
-	n.UseHandler(router)
-	n.ServeHTTP(w, r)
-
-	return w
-}
-
 func TestListBoardsHandler(t *testing.T) {
-	response := BoardHandlerAction(TestAction{
-		Method:     http.MethodGet,
-		RouterPath: "/boards",
-		ReqPath:    "/boards",
-		Name:       "ListBoardsHandler",
-		Handler:    ListBoardsHandler,
-		Seeders:    []func(db *gorm.DB){SeedBoards},
-		Tables:     []string{"boards"},
-	})
+	action := HttpTestAction[Board]{
+		Method: http.MethodGet,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.GET("/boards", ctrl.MakeHandler(ae, ListBoardsHandler))
+		},
+		ReqPath: "/boards",
+		Seeders: []func(db *gorm.DB){SeedWorkspaces, SeedBoards},
+		Tables:  []string{"workspaces", "boards"},
+	}
+	response := action.Run()
 	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
 	var d map[string]interface{}
 
@@ -66,25 +56,48 @@ func TestListBoardsHandler(t *testing.T) {
 	assert.Equal(t, len(BoardAll()), int(d["count"].(float64)), "they should be equal")
 }
 
+func TestListBoardsHandlerLimit(t *testing.T) {
+	action := HttpTestAction[Board]{
+		Method: http.MethodGet,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.GET("/boards", ctrl.MakeHandler(ae, ListBoardsHandler))
+		},
+		ReqPath: "/boards?limit=1",
+		Seeders: []func(db *gorm.DB){SeedBoards},
+		Tables:  []string{"boards"},
+	}
+	response := action.Run()
+	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
+	var d map[string]interface{}
+
+	if err := json.Unmarshal(response.Body.Bytes(), &d); err != nil {
+		assert.Fail(t, "Unmarshal should not fail")
+		return
+	}
+	assert.Equal(t, 1, int(d["count"].(float64)), "they should be equal")
+}
+
 func TestPostBoardHandler(t *testing.T) {
 	// create a new board
 	board := Board{
 		Title:       "Test Board",
 		Description: "This is a test board",
+		WorkspaceId: 1,
 	}
-	// to io reader
 	b, _ := json.Marshal(board)
 
-	response := BoardHandlerAction(TestAction{
-		Method:     http.MethodPost,
-		RouterPath: "/boards",
-		ReqPath:    "/boards",
-		Name:       "CreateBoardHandler",
-		Handler:    CreateBoardHandler,
-		Body:       bytes.NewReader(b),
-		Seeders:    []func(db *gorm.DB){SeedBoards},
-		Tables:     []string{"boards"},
-	})
+	action := HttpTestAction[Board]{
+		Method:  http.MethodPost,
+		ReqPath: "/boards",
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.POST("/boards", ctrl.MakeHandler(ae, CreateBoardHandler))
+		},
+		Body:    bytes.NewReader(b),
+		Seeders: []func(db *gorm.DB){SeedWorkspaces, SeedBoards},
+		Tables:  []string{"boards", "workspaces"},
+	}
+
+	response := action.Run()
 
 	assert.Equal(t, http.StatusCreated, response.Code, "they should be equal")
 	var d map[string]interface{}
@@ -95,22 +108,24 @@ func TestPostBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	if assert.Equal(t, len(boards), int(d["ID"].(float64)), "they should be equal") {
-		assert.Equal(t, board.Title, d["Title"], "they should be equal")
-		assert.Equal(t, board.Description, d["Description"], "they should be equal")
+	if assert.Equal(t, len(boards), int(d["id"].(float64)), "they should be equal") {
+		assert.Equal(t, board.Title, d["title"], "they should be equal")
+		assert.Equal(t, board.Description, d["description"], "they should be equal")
 	}
 }
 
 func TestDeleteBoardHandler(t *testing.T) {
-	response := BoardHandlerAction(TestAction{
-		Method:     http.MethodDelete,
-		RouterPath: "/boards/{bid:[0-9]+}",
-		ReqPath:    "/boards/1",
-		Name:       "DeleteBoardHandler",
-		Handler:    DeleteBoardHandler,
-		Seeders:    []func(db *gorm.DB){SeedBoards},
-		Tables:     []string{"boards"},
-	})
+	action := HttpTestAction[Board]{
+		Method: http.MethodDelete,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.DELETE("/boards/:id", ctrl.MakeHandler(ae, DeleteBoardHandler))
+		},
+		ReqPath: "/boards/1",
+		Seeders: []func(db *gorm.DB){SeedBoards},
+		Tables:  []string{"boards"},
+	}
+
+	response := action.Run()
 
 	var boards []Board
 	database.DBConn.Find(&boards)
@@ -121,19 +136,21 @@ func TestDeleteBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(0), int(d["ID"].(float64)), "they should be equal")
+	assert.Equal(t, int(0), int(d["id"].(float64)), "they should be equal")
 }
 
 func TestGetBoardHandler(t *testing.T) {
-	response := BoardHandlerAction(TestAction{
-		Method:     http.MethodGet,
-		RouterPath: "/boards/{bid:[0-9]+}",
-		ReqPath:    "/boards/1",
-		Name:       "GetBoardHandler",
-		Handler:    GetBoardHandler,
-		Seeders:    []func(db *gorm.DB){SeedBoards},
-		Tables:     []string{"boards"},
-	})
+	action := HttpTestAction[Board]{
+		Method: http.MethodGet,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.GET("/boards/:id", ctrl.MakeHandler(ae, GetBoardHandler))
+		},
+		ReqPath: "/boards/1",
+		Handler: GetBoardHandler,
+		Seeders: []func(db *gorm.DB){SeedBoards},
+		Tables:  []string{"boards"},
+	}
+	response := action.Run()
 
 	var boards []Board
 	database.DBConn.Find(&boards)
@@ -144,31 +161,35 @@ func TestGetBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
+	assert.Equal(t, int(1), int(d["id"].(float64)), "they should be equal")
 }
 
 func TestUpdateBoardHandler(t *testing.T) {
 	// create a new board
-	board := Board{
+	b := Board{
 		Title:       "Title change",
 		Description: "Desc change",
+		WorkspaceId: 1,
 	}
 	// to io reader
-	b, _ := json.Marshal(board)
+	bJson, _ := json.Marshal(b)
 
-	response := BoardHandlerAction(TestAction{
-		Method:     http.MethodPut,
-		RouterPath: "/boards/{bid:[0-9]+}",
-		ReqPath:    "/boards/1",
-		Name:       "UpdateBoardHandler",
-		Handler:    UpdateBoardHandler,
-		Body:       bytes.NewReader(b),
-		Seeders:    []func(db *gorm.DB){SeedBoards},
-		Tables:     []string{"boards"},
-	})
+	action := HttpTestAction[Board]{
+		Method:  http.MethodPatch,
+		ReqPath: "/boards/1",
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.PATCH("/boards/:id", ctrl.MakeHandler(ae, UpdateBoardHandler))
+		},
+		Body: bytes.NewReader(bJson),
+		Seeders: []func(db *gorm.DB){func(db *gorm.DB) {
+			CreateWorkspaceFaker(db)
+		}, SeedBoards},
+		Tables: []string{"boards"},
+	}
+	response := action.Run()
 
-	var boards []Board
-	database.DBConn.Find(&boards)
+	var board Board
+	database.DBConn.First(&board, 1)
 	var d map[string]interface{}
 	assert.Equal(t, http.StatusOK, response.Code, "they should be equal")
 
@@ -176,21 +197,27 @@ func TestUpdateBoardHandler(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
-	assert.Equal(t, board.Title, d["Title"], "they should be equal")
-	assert.Equal(t, board.Description, d["Description"], "they should be equal")
+	assert.Equal(t, board.ID, uint(1), "they should be equal")
+	assert.Equal(t, board.Title, b.Title, "they should be equal")
+	assert.Equal(t, board.Description, b.Description, "they should be equal")
+	assert.NotNil(t, board.CreatedAt, "they should not be nil")
+	assert.NotNil(t, board.WorkspaceId, "they should not be nil")
+
 }
 
 func TestPreloadGetBoard(t *testing.T) {
-	response := BoardHandlerAction(TestAction{
-		Method:     http.MethodGet,
-		RouterPath: "/boards/{bid:[0-9]+}",
-		ReqPath:    "/boards/1",
-		Name:       "GetBoardHandler",
-		Handler:    GetBoardHandler,
-		Seeders:    []func(db *gorm.DB){CreateBoardFaker, SeedSections},
-		Tables:     []string{"boards", "sections"},
-	})
+	action := HttpTestAction[Board]{
+		Method: http.MethodGet,
+		RouterFunc: func(e *gin.Engine, ae app.AppEnv) {
+			e.GET("/boards/:id", ctrl.MakeHandler(ae, GetBoardHandler))
+		},
+		ReqPath: "/boards/1",
+		Seeders: []func(db *gorm.DB){func(db *gorm.DB) {
+			CreateBoardFaker(db)
+		}, SeedSections},
+		Tables: []string{"boards", "sections"},
+	}
+	response := action.Run()
 
 	var board Board
 	database.DBConn.Preload("Sections").First(&board)
@@ -201,7 +228,6 @@ func TestPreloadGetBoard(t *testing.T) {
 		assert.Fail(t, "Unmarshal should not fail")
 		return
 	}
-	assert.Equal(t, int(1), int(d["ID"].(float64)), "they should be equal")
-	assert.Equal(t, len(board.Sections), len(d["Sections"].([]interface{})), "they should be equal")
+	assert.Equal(t, int(1), int(d["id"].(float64)), "they should be equal")
+	assert.Equal(t, len(board.Sections), len(d["sections"].([]interface{})), "they should be equal")
 }
-*/

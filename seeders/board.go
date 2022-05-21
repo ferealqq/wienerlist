@@ -9,32 +9,44 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateBoard(db *gorm.DB, title string, desc string) *gorm.DB {
-	return db.Create(&models.Board{
+func CreateBoard(db *gorm.DB, title string, desc string, workspace uint) *seed.SeedOut[models.Board] {
+	return seed.SeedModel(db, models.Board{
 		Title:       title,
 		Description: desc,
+		WorkspaceId: workspace,
 	})
 }
 
-func CreateBoardFaker(db *gorm.DB) {
-	db.Create(&models.Board{
+func CreateBoardFaker(db *gorm.DB) *seed.SeedOut[models.Board] {
+	return seed.SeedModel(db, models.Board{
 		Title:       faker.Word(),
 		Description: faker.Sentence(),
+		WorkspaceId: CreateWorkspaceFaker(db).Model.ID,
 	})
 }
 
-func BoardAll() []seed.Seed {
-	return []seed.Seed{
+func BoardAll() []seed.Seed[models.Board] {
+	return []seed.Seed[models.Board]{
 		{
 			Name: "Board 1",
-			Run: func(db *gorm.DB) *gorm.DB {
-				return CreateBoard(db, "REST API development", "This is a board for the REST API development")
+			Run: func(db *gorm.DB) *seed.SeedOut[models.Board] {
+				return CreateBoard(
+					db,
+					"REST API development",
+					"This is a board for the REST API development",
+					1,
+				)
 			},
 		},
 		{
 			Name: "Board 2",
-			Run: func(db *gorm.DB) *gorm.DB {
-				return CreateBoard(db, "Frontend development", "This is a board for the frontend development")
+			Run: func(db *gorm.DB) *seed.SeedOut[models.Board] {
+				return CreateBoard(
+					db,
+					"Frontend development",
+					"This is a board for the frontend development",
+					1,
+				)
 			},
 		},
 	}

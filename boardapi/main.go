@@ -2,8 +2,10 @@ package boardapi
 
 import (
 	"log"
+	"time"
 
 	a "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/unrolled/secure"
 	"github.com/urfave/negroni"
@@ -12,9 +14,20 @@ import (
 // StartServer Wraps the mux Router and uses the Negroni Middleware
 func StartServer(appEnv a.AppEnv) {
 	router := gin.Default()
-	BoardRouter(router, appEnv)
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"PUT", "PATCH", "GET", "POST", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Access-Control-Allow-Origin", "Content-Length", "Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token", "X-Powered-By"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+	apiRouter := router.Group("/api/v1")
+	WorkspaceRouter(apiRouter, appEnv)
+	BoardRouter(apiRouter, appEnv)
+	SectionRouter(apiRouter, appEnv)
+	ItemRouter(apiRouter, appEnv)
 	isDevelopment := appEnv.Env == "LOCAL"
-
 	if !isDevelopment {
 		gin.SetMode(gin.ReleaseMode)
 	}

@@ -14,15 +14,12 @@ var (
 /**
  * Initialize the database connection
  */
-func InitDB() {
+func InitDB() error {
 	var err error
 	// TODO check that the database connection is closed or not initialized
 	dsn := os.Getenv("DB_DSN")
 	DBConn, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 /**

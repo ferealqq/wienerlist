@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/status"
@@ -13,8 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// FIXME: BaseController renamed to ControllerContainer/BaseController ? BaseController could be misleading.
-type BaseController struct {
+type BaseController[M interface{}] struct {
 	// Application environment
 	AppEnv appenv.AppEnv
 	// Connection to the database
@@ -23,25 +21,43 @@ type BaseController struct {
 	Context *gin.Context
 }
 
-func (a *BaseController) SendJSON(status int, json interface{}) {
-	a.Context.JSON(status, json)
+func (b *BaseController[M]) SendJSON(status int, json interface{}) {
+	b.Context.JSON(status, json)
 }
 
-func (a *BaseController) SendInternalServerError(message string, err error) {
+func (b *BaseController[M]) SendInternalServerError(message string, err error) {
 	log.WithFields(log.Fields{
-		"env":    a.AppEnv.Env,
+		"env":    b.AppEnv.Env,
 		"status": http.StatusInternalServerError,
 		"error":  err,
 	}).Error(message)
-	a.SendJSON(http.StatusInternalServerError, gin.H{"message": message})
+	b.SendJSON(http.StatusInternalServerError, gin.H{"message": message})
 }
 
-// FIXME move this to a pkg file
+func (b *BaseController[M]) SendNotFound(message string) {
+	b.SendJSON(http.StatusNotFound, status.Response{
+		Status:  strconv.Itoa(http.StatusNotFound),
+		Message: message,
+	})
+}
+
+func (b *BaseController[M]) DefaultQueryInt(param string, def int) int {
+	if val := b.Context.Query(param); val == "" {
+		return def
+	} else {
+		if val, err := strconv.Atoi(val); err == nil {
+			return val
+		} else {
+			return def
+		}
+	}
+}
+
 type UriId struct {
 	ID uint `uri:"id" binding:"required,gt=0"`
 }
 
-func (b *BaseController) GetUriId() (uint, error) {
+func (b *BaseController[M]) GetUriId() (uint, error) {
 	var uri UriId
 	if e := b.Context.ShouldBindUri(&uri); e != nil {
 		b.SendJSON(http.StatusBadRequest, status.Response{
@@ -53,22 +69,22 @@ func (b *BaseController) GetUriId() (uint, error) {
 	return uri.ID, nil
 }
 
-// FIXME: Use generics with this function instead of hardcoded models.Board when project has been upgraded to go1.18
-func (b *BaseController) GetPostModel(m models.Board) (models.Board, error) {
+// Get the post model of the request, incase of error send a bad request response
+func (b *BaseController[M]) GetPostModel(m *M) error {
 	if err := b.Context.ShouldBindJSON(&m); err != nil {
 		// TODO Form a pattern in which we want to return error's
 		b.SendJSON(http.StatusBadRequest, status.Response{
 			Status:  strconv.Itoa(http.StatusBadRequest),
 			Message: "malformed object",
 		})
-		return m, err
+		return err
 	}
-	return m, nil
+	return nil
 }
 
-func MakeHandler(appEnv appenv.AppEnv, fn func(BaseController)) func(*gin.Context) {
+func MakeHandler[M interface{}](appEnv appenv.AppEnv, fn func(BaseController[M])) func(*gin.Context) {
 	return func(c *gin.Context) {
-		fn(BaseController{
+		fn(BaseController[M]{
 			DB:      database.DBConn,
 			AppEnv:  appEnv,
 			Context: c,

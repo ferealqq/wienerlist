@@ -1,20 +1,19 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"strconv"
 
 	models "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
 	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
 	"github.com/ferealqq/golang-trello-copy/server/pkg/health"
-	"github.com/ferealqq/golang-trello-copy/server/pkg/status"
+	"gorm.io/gorm"
 )
 
 // HandlerFunc is a custom implementation of the http.HandlerFunc
-type HandlerFunc func(ctrl.BaseController)
 
 // HealthcheckHandler returns useful info about the app
-func HealthcheckHandler(baseController ctrl.BaseController) {
+func HealthcheckHandler(baseController ctrl.BaseController[models.Board]) {
 	check := health.Check{
 		AppName: "golang-trello-copy",
 		Version: baseController.AppEnv.Version,
@@ -22,27 +21,33 @@ func HealthcheckHandler(baseController ctrl.BaseController) {
 	baseController.SendJSON(http.StatusOK, check)
 }
 
-func ListBoardsHandler(baseController ctrl.BaseController) {
+func ListBoardsHandler(baseController ctrl.BaseController[models.Board]) {
 	var boards []models.Board
-	result := baseController.DB.Preload("Sections").Find(&boards)
+	result := baseController.DB.
+		Preload("Sections").
+		Limit(baseController.DefaultQueryInt("limit", 100)).
+		Offset(baseController.DefaultQueryInt("skip", 0)).
+		Find(&boards)
+
 	if result.Error != nil {
 		baseController.SendInternalServerError("Error listing boards", result.Error)
 		return
 	}
-	responseObject := make(map[string]interface{})
-	responseObject["bords"] = boards
-	responseObject["count"] = len(boards)
-	baseController.SendJSON(http.StatusOK, responseObject)
+	baseController.SendJSON(http.StatusOK, map[string]interface{}{
+		"boards": boards,
+		"count":  len(boards),
+	})
 }
 
-func CreateBoardHandler(baseController ctrl.BaseController) {
-	// TODO Validation
+func CreateBoardHandler(baseController ctrl.BaseController[models.Board]) {
+	// TODO Validation?
 	var b models.Board
-	if b, err := baseController.GetPostModel(b); err == nil {
+	if err := baseController.GetPostModel(&b); err == nil {
 		board := models.Board{
 			// FIXME: Couldn't we just give the b model to the model?
 			Title:       b.Title,
 			Description: b.Description,
+			WorkspaceId: b.WorkspaceId,
 		}
 		result := baseController.DB.Create(&board)
 		if result.Error != nil {
@@ -54,15 +59,15 @@ func CreateBoardHandler(baseController ctrl.BaseController) {
 }
 
 // GetBoardHandler gets a board from the board store by id
-func GetBoardHandler(baseController ctrl.BaseController) {
+func GetBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if ID, err := baseController.GetUriId(); err == nil {
 		board := models.Board{}
 		result := baseController.DB.Preload("Sections").First(&board, ID)
-		if result.Error != nil {
-			baseController.SendJSON(http.StatusNotFound, status.Response{
-				Status:  strconv.Itoa(http.StatusNotFound),
-				Message: "Can't find board",
-			})
+		if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			baseController.SendNotFound("Board not found")
+			return
+		} else if result.Error != nil {
+			baseController.SendInternalServerError("Error getting board", result.Error)
 			return
 		}
 		baseController.SendJSON(http.StatusOK, board)
@@ -70,29 +75,23 @@ func GetBoardHandler(baseController ctrl.BaseController) {
 }
 
 // Update a board in the board store
-func UpdateBoardHandler(baseController ctrl.BaseController) {
+func UpdateBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if bid, err := baseController.GetUriId(); err == nil {
 		// TODO this should be a reusable function, used twice in this file
 		var b models.Board
-		if b, err := baseController.GetPostModel(b); err == nil {
-			board := models.Board{
-				ID:          uint(bid),
-				Title:       b.Title,
-				Description: b.Description,
-			}
-
-			if err = baseController.DB.Model(&board).Updates(&board).Error; err != nil {
+		if err := baseController.GetPostModel(&b); err == nil {
+			if err = baseController.DB.Model(&models.Board{}).Where("id = ?", bid).Updates(&b).Error; err != nil {
 				baseController.SendInternalServerError("Error updating board", err)
 				return
 			}
-
-			baseController.SendJSON(http.StatusOK, board)
+			// Empty ok
+			baseController.SendJSON(http.StatusOK, nil)
 		}
 	}
 }
 
 // Delete a board from the board store
-func DeleteBoardHandler(baseController ctrl.BaseController) {
+func DeleteBoardHandler(baseController ctrl.BaseController[models.Board]) {
 	if ID, err := baseController.GetUriId(); err == nil {
 		var board models.Board
 		result := baseController.DB.Delete(&board, ID)
@@ -102,10 +101,7 @@ func DeleteBoardHandler(baseController ctrl.BaseController) {
 		}
 		// If the board was not found and due to it not being found it couldn't be deleted
 		if result.RowsAffected == 0 {
-			baseController.SendJSON(http.StatusNotFound, status.Response{
-				Status:  strconv.Itoa(http.StatusNotFound),
-				Message: "Can't find board",
-			})
+			baseController.SendNotFound("Board not found")
 			return
 		}
 		baseController.SendJSON(http.StatusOK, board)
