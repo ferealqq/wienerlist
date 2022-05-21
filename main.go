@@ -4,11 +4,11 @@ import (
 	"os"
 	"strings"
 
-	api "github.com/ferealqq/golang-trello-copy/server/boardapi"
-	"github.com/ferealqq/golang-trello-copy/server/migrations"
-	appenv "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
-	database "github.com/ferealqq/golang-trello-copy/server/pkg/database"
-	vparse "github.com/ferealqq/golang-trello-copy/server/pkg/version"
+	api "github.com/ferealqq/wienerlist/boardapi"
+	"github.com/ferealqq/wienerlist/migrations"
+	appenv "github.com/ferealqq/wienerlist/pkg/appenv"
+	database "github.com/ferealqq/wienerlist/pkg/database"
+	vparse "github.com/ferealqq/wienerlist/pkg/version"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -60,8 +60,7 @@ func main() {
 		panic(err)
 	}
 	if env == LOCAL {
-		migrations.MigrateSeedAfterwards(
-			database.DBConn)
+		migrations.MigrateSeedAfterwards(database.DBConn)
 	} else {
 		err = migrations.Migrate(database.DBConn)
 		if err != nil {

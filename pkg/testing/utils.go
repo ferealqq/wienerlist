@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	app "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
-	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
-	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
+	app "github.com/ferealqq/wienerlist/pkg/appenv"
+	ctrl "github.com/ferealqq/wienerlist/pkg/controller"
+	"github.com/ferealqq/wienerlist/pkg/database"
 	"github.com/gin-gonic/gin"
 	"github.com/urfave/negroni"
 	"gorm.io/gorm"

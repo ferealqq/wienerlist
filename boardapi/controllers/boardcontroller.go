@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
-	models "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
-	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
-	"github.com/ferealqq/golang-trello-copy/server/pkg/health"
+	models "github.com/ferealqq/wienerlist/boardapi/models"
+	ctrl "github.com/ferealqq/wienerlist/pkg/controller"
+	"github.com/ferealqq/wienerlist/pkg/health"
 	"gorm.io/gorm"
 )
 

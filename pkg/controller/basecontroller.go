@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
-	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
-	"github.com/ferealqq/golang-trello-copy/server/pkg/status"
+	"github.com/ferealqq/wienerlist/pkg/appenv"
+	"github.com/ferealqq/wienerlist/pkg/database"
+	"github.com/ferealqq/wienerlist/pkg/status"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"

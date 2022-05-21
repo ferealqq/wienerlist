@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	a "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
+	a "github.com/ferealqq/wienerlist/pkg/appenv"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/unrolled/secure"

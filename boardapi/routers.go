@@ -1,9 +1,9 @@
 package boardapi
 
 import (
-	ctrl "github.com/ferealqq/golang-trello-copy/server/boardapi/controllers"
-	app "github.com/ferealqq/golang-trello-copy/server/pkg/appenv"
-	controllers "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
+	ctrl "github.com/ferealqq/wienerlist/boardapi/controllers"
+	app "github.com/ferealqq/wienerlist/pkg/appenv"
+	controllers "github.com/ferealqq/wienerlist/pkg/controller"
 	"github.com/gin-gonic/gin"
 )
 

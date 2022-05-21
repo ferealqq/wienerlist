@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	models "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
-	ctrl "github.com/ferealqq/golang-trello-copy/server/pkg/controller"
+	models "github.com/ferealqq/wienerlist/boardapi/models"
+	ctrl "github.com/ferealqq/wienerlist/pkg/controller"
 	"gorm.io/gorm"
 )
 
