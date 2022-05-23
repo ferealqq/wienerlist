@@ -54,6 +54,10 @@ func (p *PageView) renderHeader() *vecty.HTML {
 		),
 
 		elem.Heading1(
+			vecty.Markup(
+				vecty.Class("mun"),
+			),
+      
 			vecty.Text("Workspaces!"),
 		),
 	)

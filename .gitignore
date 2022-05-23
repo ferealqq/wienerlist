@@ -1,3 +1,7 @@
 vendor/*
 
 tmp/*
+
+front/dist/*
+
+front/tailwindcss

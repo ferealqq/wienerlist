@@ -133,7 +133,11 @@ func (p *boardItem) Render() vecty.ComponentOrHTML {
 			vecty.Class("border-1"),
 			vecty.Class("rounded-1"),
 		),
-		elem.Label(
+		elem.Button(
+			vecty.Markup(
+				vecty.Class("btn"),
+				vecty.Class("btn-link"),
+			),
 			vecty.Text(p.Board.Title),
 		),
 	)
