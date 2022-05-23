@@ -13,7 +13,7 @@ COPY --from=build /app/VERSION /opt/app/VERSION
 
 ENV ENV=PRD
 ENV VERSION=/opt/app/VERSION
-ENV PORT=3000
+ENV PORT=4000
 ENV GIN_MODE=release
 # DB_DSN env is set in heroku for production. 
 # DB_DSN env is set in docker-production.yml for local production build testing. 

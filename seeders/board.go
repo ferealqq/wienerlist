@@ -4,8 +4,8 @@ import (
 	"log"
 
 	faker "github.com/bxcodec/faker/v3"
-	"github.com/ferealqq/golang-trello-copy/server/boardapi/models"
-	"github.com/ferealqq/golang-trello-copy/server/pkg/seed"
+	"github.com/ferealqq/wienerlist/boardapi/models"
+	"github.com/ferealqq/wienerlist/pkg/seed"
 	"gorm.io/gorm"
 )
 

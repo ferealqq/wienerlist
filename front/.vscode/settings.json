@@ -1,0 +1,9 @@
+{
+  "go.toolsEnvVars": {
+    "GOOS": "js",
+    "GOARCH": "wasm"
+  },
+  "go.useLanguageServer": false,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "golang.go"
+}

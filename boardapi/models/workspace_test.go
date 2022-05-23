@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ferealqq/golang-trello-copy/server/pkg/database"
+	"github.com/ferealqq/wienerlist/pkg/database"
 	"github.com/stretchr/testify/assert"
 )
 
