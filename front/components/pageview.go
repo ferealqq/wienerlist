@@ -57,6 +57,7 @@ func (p *PageView) renderHeader() *vecty.HTML {
 			vecty.Markup(
 				vecty.Class("mun"),
 			),
+      
 			vecty.Text("Workspaces!"),
 		),
 	)
