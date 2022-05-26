@@ -19,5 +19,5 @@ services:
     environment:
       DB_DSN: "host=board_db user=postgres password=postgres dbname=BOARD port=5432 sslmode=disable TimeZone=Asia/Shanghai"
     ports:
-      - 3000:3000
+      - 4000:4000
   

@@ -3,8 +3,8 @@ package migrations
 import (
 	"errors"
 
-	m "github.com/ferealqq/golang-trello-copy/server/boardapi/models"
-	s "github.com/ferealqq/golang-trello-copy/server/seeders"
+	m "github.com/ferealqq/wienerlist/boardapi/models"
+	s "github.com/ferealqq/wienerlist/seeders"
 	"gorm.io/gorm"
 )
 
