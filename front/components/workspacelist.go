@@ -1,6 +1,8 @@
 package components
 
 import (
+	"strconv"
+
 	"github.com/ferealqq/wienerlist/front/actions"
 	"github.com/ferealqq/wienerlist/front/dispatcher"
 	"github.com/ferealqq/wienerlist/front/store/model"
@@ -8,10 +10,11 @@ import (
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/hexops/vecty/style"
+	router "marwan.io/vecty-router"
 )
 
-// WorkspaceView is a vecty.Component which represents a single item in the TODO
-type WorkspaceView struct {
+// WorkspaceList is a vecty.Component which represents a single item in the TODO
+type WorkspaceList struct {
 	vecty.Core
 
 	Index      int              `vecty:"prop"`
@@ -23,41 +26,41 @@ type WorkspaceView struct {
 }
 
 // Key implements the vecty.Keyer interface.
-func (p *WorkspaceView) Key() interface{} {
+func (p *WorkspaceList) Key() interface{} {
 	return p.Index
 }
 
-func (p *WorkspaceView) toggleBoards(event *vecty.Event) {
+func (p *WorkspaceList) toggleBoards(event *vecty.Event) {
 	p.showBoards = !p.showBoards
 	vecty.Rerender(p)
 }
 
-func (p *WorkspaceView) onDestroy(event *vecty.Event) {
+func (p *WorkspaceList) onDestroy(event *vecty.Event) {
 	dispatcher.Dispatch(&actions.DestroyItem{
 		Index: p.Index,
 	})
 }
 
-func (p *WorkspaceView) onToggleCompleted(event *vecty.Event) {
+func (p *WorkspaceList) onToggleCompleted(event *vecty.Event) {
 	dispatcher.Dispatch(&actions.SetCompleted{
 		Index:     p.Index,
 		Completed: event.Target.Get("checked").Bool(),
 	})
 }
 
-func (p *WorkspaceView) onStartEdit(event *vecty.Event) {
+func (p *WorkspaceList) onStartEdit(event *vecty.Event) {
 	p.editing = true
 	p.editTitle = p.Workspace.Title
 	vecty.Rerender(p)
 	p.input.Node().Call("focus")
 }
 
-func (p *WorkspaceView) onEditInput(event *vecty.Event) {
+func (p *WorkspaceList) onEditInput(event *vecty.Event) {
 	p.editTitle = event.Target.Get("value").String()
 	vecty.Rerender(p)
 }
 
-func (p *WorkspaceView) onStopEdit(event *vecty.Event) {
+func (p *WorkspaceList) onStopEdit(event *vecty.Event) {
 	p.editing = false
 	vecty.Rerender(p)
 	dispatcher.Dispatch(&actions.SetTitle{
@@ -67,7 +70,7 @@ func (p *WorkspaceView) onStopEdit(event *vecty.Event) {
 }
 
 // Render implements the vecty.Component interface.
-func (p *WorkspaceView) Render() vecty.ComponentOrHTML {
+func (p *WorkspaceList) Render() vecty.ComponentOrHTML {
 	return elem.ListItem(
 		vecty.Markup(
 			vecty.ClassMap{
@@ -102,7 +105,7 @@ func (p *WorkspaceView) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func (p *WorkspaceView) renderBoardList() *vecty.HTML {
+func (p *WorkspaceList) renderBoardList() *vecty.HTML {
 	var items vecty.List
 	bl := len(p.Workspace.Boards)
 	bps := make([]*model.Board, 0, bl)
@@ -128,6 +131,7 @@ type boardItem struct {
 }
 
 func (p *boardItem) Render() vecty.ComponentOrHTML {
+
 	return elem.ListItem(
 		vecty.Markup(
 			vecty.Class("border-1"),
@@ -137,6 +141,9 @@ func (p *boardItem) Render() vecty.ComponentOrHTML {
 			vecty.Markup(
 				vecty.Class("btn"),
 				vecty.Class("btn-link"),
+				event.Click(func(_ *vecty.Event) {
+					router.Redirect("/boards/" + strconv.Itoa(int(p.Board.ID)))
+				}),
 			),
 			vecty.Text(p.Board.Title),
 		),
