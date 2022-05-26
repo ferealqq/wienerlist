@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 .mun{
-    color: red;
     font-size: 120px;
     font-weight: bold; 
 }
