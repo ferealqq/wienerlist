@@ -32,11 +32,20 @@ func (p *PageView) Render() vecty.ComponentOrHTML {
 						vecty.Class("col-10"),
 					),
 					router.NewRoute("/", &HomeContainer{}, router.NewRouteOpts{ExactMatch: true}),
-					router.NewRoute("/boards/{id}", &BoardContainer{}, router.NewRouteOpts{ExactMatch: true}),
+					router.NewRoute("/boards/{id}", new(Test), router.NewRouteOpts{ExactMatch: true}),
 				),
 			),
 		),
 	)
+}
+
+type Test struct {
+	vecty.Core
+}
+
+func (t *Test) Render() vecty.ComponentOrHTML {
+	sId := router.GetNamedVar(t)["id"]
+	return &BoardContainer{Index: sId}
 }
 
 // HomeContainer is a vecty.Component which represents the entire page.
