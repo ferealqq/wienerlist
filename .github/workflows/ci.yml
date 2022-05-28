@@ -39,7 +39,11 @@ jobs:
       run: go mod download
 
     - name: Build
-      run: go build -v ./...
+      # Ignore folders vendor and tmp because they don't have anything to build.
+      # Ignore front because it needs a different build arguments 
+      run: go build -v $(ls -d */ | grep -wv 'front\|vendor\|tmp' | sed 's/.*/.\/&.../')
 
     - name: Test
-      run: go test -v ./...
+      # Ignore folders vendor and tmp because they don't have anything to test.
+      # Ignore front because it needs a different arguments 
+      run: go test -v $(ls -d */ | grep -wv 'front\|vendor\|tmp' | sed 's/.*/.\/&.../')
