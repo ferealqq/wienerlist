@@ -26,7 +26,7 @@ func (b *BoardComponent) Key() interface{} {
 }
 
 func (b *BoardComponent) Mount() {
-	store.Listeners.Add(b, func() {
+	store.SectionState.Listeners.Add(b, func() {
 		b.secs = store.SectionState.BoardSections[b.Index]
 		vecty.Rerender(b)
 	})
@@ -36,8 +36,8 @@ func (b *BoardComponent) SkipRender(prev vecty.Component) bool {
 	if rs, ok := prev.(vecty.Keyer); ok {
 		// if the index changes we need to fetch all the sections for this board
 		if rs.Key() != b.Index {
-			store.Listeners.Remove(b)
-			store.Listeners.Add(b, func() {
+			store.SectionState.Listeners.Remove(b)
+			store.SectionState.Listeners.Add(b, func() {
 				b.secs = store.SectionState.BoardSections[b.Index]
 				vecty.Rerender(b)
 			})

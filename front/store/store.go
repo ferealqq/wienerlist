@@ -6,7 +6,6 @@ import (
 	"github.com/ferealqq/wienerlist/front/store/model"
 	"github.com/ferealqq/wienerlist/front/store/services"
 	"github.com/ferealqq/wienerlist/front/store/state"
-	"github.com/ferealqq/wienerlist/front/store/storeutil"
 )
 
 var api = services.NewApi("http://localhost:4000/api/v1")
@@ -16,17 +15,16 @@ var (
 	Items []*model.Item
 
 	// Filter represents the active viewing filter for items.
-	Filter = model.All
-
-	// Listeners is the listeners that will be invoked when the store changes.
-	Listeners = storeutil.NewListenerRegistry()
-
+	Filter         = model.All
 	SectionState   = state.NewSectionState()
 	WorkspaceState = state.NewWorkspaceState()
 )
 
 func init() {
-	dispatcher.Register(onAction)
+	registers := []func(action interface{}){onWorkspaceAction, onSectionAction}
+	for _, r := range registers {
+		dispatcher.Register(r)
+	}
 }
 
 func FetchBoardSectionsIfNeeded(boardId int) error {
@@ -84,41 +82,8 @@ func count(completed bool) int {
 	return count
 }
 
-func onAction(action interface{}) {
+func onSectionAction(action interface{}) {
 	switch a := action.(type) {
-	case *actions.ReplaceItems:
-		Items = a.Items
-
-	case *actions.AddItem:
-		Items = append(Items, &model.Item{Title: a.Title, Completed: false})
-
-	case *actions.DestroyItem:
-		copy(Items[a.Index:], Items[a.Index+1:])
-		Items = Items[:len(Items)-1]
-
-	case *actions.SetTitle:
-		Items[a.Index].Title = a.Title
-
-	case *actions.SetCompleted:
-		Items[a.Index].Completed = a.Completed
-
-	case *actions.SetAllCompleted:
-		for _, item := range Items {
-			item.Completed = a.Completed
-		}
-
-	case *actions.ClearCompleted:
-		var activeItems []*model.Item
-		for _, item := range Items {
-			if !item.Completed {
-				activeItems = append(activeItems, item)
-			}
-		}
-		Items = activeItems
-
-	case *actions.SetFilter:
-		Filter = a.Filter
-
 	case *actions.FetchSectionsRequest:
 		SectionState.IsFetching = true
 		SectionState.LastActionFailed = false
@@ -139,7 +104,15 @@ func onAction(action interface{}) {
 		SectionState.BoardSections[a.BoardId] = secs
 		SectionState.LastActionFailed = false
 		SectionState.IsFetching = false
+	default:
+		return // don't fire listeners
+	}
 
+	SectionState.Listeners.Fire()
+}
+
+func onWorkspaceAction(action interface{}) {
+	switch a := action.(type) {
 	case *actions.FetchWorkspacesRequest:
 		WorkspaceState.IsFetching = true
 		WorkspaceState.LastActionFailed = false
@@ -166,10 +139,9 @@ func onAction(action interface{}) {
 		WorkspaceState.Workspaces = ws
 		WorkspaceState.LastActionFailed = false
 		WorkspaceState.IsFetching = false
-
 	default:
 		return // don't fire listeners
 	}
 
-	Listeners.Fire()
+	WorkspaceState.Listeners.Fire()
 }

@@ -15,7 +15,7 @@ type LeftPanel struct {
 }
 
 func (l *LeftPanel) Mount() {
-	store.Listeners.Add(l, func() {
+	store.WorkspaceState.Listeners.Add(l, func() {
 		l.ws = store.WorkspaceState.Workspaces
 		vecty.Rerender(l)
 	})

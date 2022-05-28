@@ -1,6 +1,9 @@
 package state
 
-import "github.com/ferealqq/wienerlist/front/store/model"
+import (
+	"github.com/ferealqq/wienerlist/front/store/model"
+	"github.com/ferealqq/wienerlist/front/store/storeutil"
+)
 
 // First int represents parent id second int represents the Models id
 type GenDataStore[M interface{}] map[int]map[int]*M
@@ -9,6 +12,7 @@ type defState struct {
 	IsFetching       bool
 	LastActionFailed bool
 	Error            error
+	Listeners        *storeutil.ListenerRegistry
 }
 
 func defaultState() defState {
@@ -16,6 +20,7 @@ func defaultState() defState {
 		IsFetching:       false,
 		LastActionFailed: false,
 		Error:            nil,
+		Listeners:        storeutil.NewListenerRegistry(),
 	}
 }
 
