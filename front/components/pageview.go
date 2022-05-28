@@ -1,6 +1,8 @@
 package components
 
 import (
+	"strconv"
+
 	"github.com/ferealqq/wienerlist/front/components/bs"
 	services "github.com/ferealqq/wienerlist/front/store/services"
 	"github.com/hexops/vecty"
@@ -32,20 +34,23 @@ func (p *PageView) Render() vecty.ComponentOrHTML {
 						vecty.Class("col-10"),
 					),
 					router.NewRoute("/", &HomeContainer{}, router.NewRouteOpts{ExactMatch: true}),
-					router.NewRoute("/boards/{id}", new(Test), router.NewRouteOpts{ExactMatch: true}),
+					router.NewRoute("/boards/{id}", new(BoardContainer), router.NewRouteOpts{ExactMatch: true}),
 				),
 			),
 		),
 	)
 }
 
-type Test struct {
+type BoardContainer struct {
 	vecty.Core
 }
 
-func (t *Test) Render() vecty.ComponentOrHTML {
-	sId := router.GetNamedVar(t)["id"]
-	return &BoardContainer{Index: sId}
+func (b *BoardContainer) Render() vecty.ComponentOrHTML {
+	id, err := strconv.Atoi(router.GetNamedVar(b)["id"])
+	if err != nil {
+		return vecty.Text("Invalid board id")
+	}
+	return &Board{Index: id}
 }
 
 // HomeContainer is a vecty.Component which represents the entire page.
