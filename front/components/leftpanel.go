@@ -1,30 +1,34 @@
 package components
 
 import (
-	"github.com/ferealqq/wienerlist/front/store/model"
+	"github.com/ferealqq/wienerlist/front/store"
+	"github.com/ferealqq/wienerlist/front/store/state"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 )
 
-func LeftPanel() vecty.ComponentOrHTML {
-	// Render implements the vecty.Component interface.
-	var allWs model.ListWorkspace
-	if err := api.Get("/workspaces/").BindModel(&allWs); err != nil {
-		//FIXME Handle errors?
-		panic(err)
-	}
+type LeftPanel struct {
+	vecty.Mounter
+	vecty.Core
 
-	l := len(allWs.Workspaces)
-	// List of pointers to workspace
-	wsps := make([]*model.Workspace, 0, l)
-	for i := 0; i != l; i++ {
-		wsps = append(wsps, &allWs.Workspaces[i])
-	}
+	ws state.WorkspaceStore
+}
+
+func (l *LeftPanel) Mount() {
+	store.Listeners.Add(l, func() {
+		l.ws = store.WorkspaceState.Workspaces
+		vecty.Rerender(l)
+	})
+}
+
+func (l *LeftPanel) Render() vecty.ComponentOrHTML {
+	// maybe this should be moved to mount? but it probably won't matter because it does only one operations and exitsy
+	go store.FetchWorkspacesIfNeeded()
 
 	return elem.Div(
 		renderHeader(),
-		vecty.If(len(allWs.Workspaces) > 0,
-			renderWorkspaceList(wsps),
+		vecty.If(len(l.ws) > 0,
+			renderWorkspaceList(l.ws),
 			renderFooter(),
 		),
 	)
@@ -48,10 +52,10 @@ func renderFooter() *vecty.HTML {
 	)
 }
 
-func renderWorkspaceList(a []*model.Workspace) *vecty.HTML {
+func renderWorkspaceList(a state.WorkspaceStore) *vecty.HTML {
 	var wsItems vecty.List
-	for i, ws := range a {
-		wsItems = append(wsItems, &WorkspaceList{Index: i, Workspace: ws})
+	for i := range a {
+		wsItems = append(wsItems, &WorkspaceList{Index: i, Workspace: a[i]})
 	}
 
 	return elem.Section(

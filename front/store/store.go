@@ -21,7 +21,8 @@ var (
 	// Listeners is the listeners that will be invoked when the store changes.
 	Listeners = storeutil.NewListenerRegistry()
 
-	SectionState = state.NewSectionState()
+	SectionState   = state.NewSectionState()
+	WorkspaceState = state.NewWorkspaceState()
 )
 
 func init() {
@@ -43,6 +44,21 @@ func FetchBoardSectionsIfNeeded(boardId int) error {
 			BoardId:  boardId,
 		})
 		return nil
+	}
+
+	return nil
+}
+
+func FetchWorkspacesIfNeeded() error {
+	if len(WorkspaceState.Workspaces) == 0 && !WorkspaceState.IsFetching {
+		dispatcher.Dispatch(&actions.FetchWorkspacesRequest{})
+		// Render implements the vecty.Component interface.
+		var allWs model.ListWorkspace
+		if err := api.Get("/workspaces/").BindModel(&allWs); err != nil {
+			dispatcher.Dispatch(&actions.FetchWorkspacesResponseError{Error: err})
+			return err
+		}
+		dispatcher.Dispatch(&actions.FetchWorkspacesResponse{ListWorkspace: allWs})
 	}
 
 	return nil
@@ -115,13 +131,41 @@ func onAction(action interface{}) {
 	case *actions.FetchSectionsResponse:
 		l := len(a.Sections)
 		// List of pointers
-		secs := make([]*model.Section, 0, l)
+		secs := make(map[int]*model.Section, l)
 		for i := 0; i != l; i++ {
-			secs = append(secs, &a.Sections[i])
+			c := a.Sections[i]
+			secs[int(c.ID)] = &c
 		}
 		SectionState.BoardSections[a.BoardId] = secs
 		SectionState.LastActionFailed = false
 		SectionState.IsFetching = false
+
+	case *actions.FetchWorkspacesRequest:
+		WorkspaceState.IsFetching = true
+		WorkspaceState.LastActionFailed = false
+
+	case *actions.FetchWorkspacesResponseError:
+		WorkspaceState.IsFetching = false
+		WorkspaceState.LastActionFailed = true
+		WorkspaceState.Error = a.Error
+
+	case *actions.FetchWorkspacesResponse:
+		// List of pointers
+		ws := make(state.WorkspaceStore, len(a.Workspaces))
+		for i := range a.Workspaces {
+			w := a.Workspaces[i]
+			bs := make(map[int]*model.Board)
+			for j := range w.Boards {
+				bs[int(w.Boards[j].ID)] = &w.Boards[j]
+			}
+			ws[int(w.ID)] = &state.WorkspaceData{
+				Workspace: &w,
+				Boards:    bs,
+			}
+		}
+		WorkspaceState.Workspaces = ws
+		WorkspaceState.LastActionFailed = false
+		WorkspaceState.IsFetching = false
 
 	default:
 		return // don't fire listeners

@@ -6,6 +6,7 @@ import (
 	"github.com/ferealqq/wienerlist/front/actions"
 	"github.com/ferealqq/wienerlist/front/dispatcher"
 	"github.com/ferealqq/wienerlist/front/store/model"
+	"github.com/ferealqq/wienerlist/front/store/state"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
@@ -17,8 +18,8 @@ import (
 type WorkspaceList struct {
 	vecty.Core
 
-	Index      int              `vecty:"prop"`
-	Workspace  *model.Workspace `vecty:"prop"`
+	Index      int                  `vecty:"prop"`
+	Workspace  *state.WorkspaceData `vecty:"prop"`
 	editing    bool
 	showBoards bool
 	editTitle  string
@@ -107,12 +108,8 @@ func (p *WorkspaceList) Render() vecty.ComponentOrHTML {
 
 func (p *WorkspaceList) renderBoardList() *vecty.HTML {
 	var items vecty.List
-	bl := len(p.Workspace.Boards)
-	bps := make([]*model.Board, 0, bl)
-	for i := 0; i != bl; i++ {
-		bps = append(bps, &p.Workspace.Boards[i])
-	}
-	for i, b := range bps {
+	for i := range p.Workspace.Boards {
+		b := p.Workspace.Boards[i]
 		items = append(items, &boardItem{Index: i, Board: b})
 	}
 	return elem.UnorderedList(

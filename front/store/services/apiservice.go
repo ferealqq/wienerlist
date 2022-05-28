@@ -125,7 +125,6 @@ func get(fullpath string) JsonResponse {
 	resp, err := http.Get(fullpath)
 	if err == nil {
 		defer resp.Body.Close()
-		defer println("body closed")
 		var data map[string]interface{}
 		err := json.NewDecoder(resp.Body).Decode(&data)
 		if err == nil {

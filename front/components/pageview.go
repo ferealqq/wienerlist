@@ -27,7 +27,7 @@ func (p *PageView) Render() vecty.ComponentOrHTML {
 					vecty.Markup(
 						vecty.Class("col-2"),
 					),
-					LeftPanel(),
+					&LeftPanel{},
 				),
 				elem.Div(
 					vecty.Markup(
@@ -50,7 +50,7 @@ func (b *BoardContainer) Render() vecty.ComponentOrHTML {
 	if err != nil {
 		return vecty.Text("Invalid board id")
 	}
-	return &Board{Index: id}
+	return &BoardComponent{Index: id}
 }
 
 // HomeContainer is a vecty.Component which represents the entire page.

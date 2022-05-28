@@ -53,3 +53,12 @@ type FetchSectionsRequest struct{}
 type FetchSectionsResponseError struct {
 	Error error
 }
+
+type FetchWorkspacesResponse struct {
+	model.ListWorkspace
+}
+
+type FetchWorkspacesRequest struct{}
+type FetchWorkspacesResponseError struct {
+	Error error
+}
