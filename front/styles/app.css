@@ -1,8 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-.mun{
-    font-size: 120px;
-    font-weight: bold; 
-}

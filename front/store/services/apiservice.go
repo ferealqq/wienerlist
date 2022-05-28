@@ -91,6 +91,25 @@ func (a *ApiGetRequest) Get(path string) JsonResponse {
 			prm = prm + t
 		case int:
 			prm = prm + strconv.Itoa(t)
+		case []interface{}:
+			for j, v := range t {
+				switch d := v.(type) {
+				case string:
+					if j == 0 {
+						prm = prm + d
+					} else {
+						prm = prm + "&" + key + "=" + d
+					}
+				case int:
+					if j == 0 {
+						prm = prm + strconv.Itoa(d)
+					} else {
+						prm = prm + "&" + key + "=" + strconv.Itoa(d)
+					}
+				default:
+					return JsonResponse{nil, errors.New("param values should only be type of int | int[] | string | string []")}
+				}
+			}
 		default:
 			return JsonResponse{nil, errors.New("param values should only be type of int | int[] | string | string []")}
 		}
@@ -98,13 +117,12 @@ func (a *ApiGetRequest) Get(path string) JsonResponse {
 		fullpath = fullpath + prm
 		i++
 	}
-	println(fullpath)
+
 	return get(fullpath)
 }
 
 func get(fullpath string) JsonResponse {
 	resp, err := http.Get(fullpath)
-
 	if err == nil {
 		defer resp.Body.Close()
 		var data map[string]interface{}

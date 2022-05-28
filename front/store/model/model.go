@@ -59,6 +59,6 @@ type ListWorkspace struct {
 }
 
 type ListSections struct {
-	Sections []Workspace
+	Sections []Section
 	Count    int
 }

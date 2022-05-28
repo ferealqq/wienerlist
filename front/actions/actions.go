@@ -43,3 +43,22 @@ type ClearCompleted struct{}
 type SetFilter struct {
 	Filter model.FilterState
 }
+
+type FetchSectionsResponse struct {
+	BoardId  int
+	Sections []model.Section
+}
+
+type FetchSectionsRequest struct{}
+type FetchSectionsResponseError struct {
+	Error error
+}
+
+type FetchWorkspacesResponse struct {
+	model.ListWorkspace
+}
+
+type FetchWorkspacesRequest struct{}
+type FetchWorkspacesResponseError struct {
+	Error error
+}
