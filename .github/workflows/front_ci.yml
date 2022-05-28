@@ -1,0 +1,26 @@
+name: Go
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.18
+        
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Build
+      working-directory: ./front
+      # Ignore folders vendor and tmp because they don't have anything to build.
+      # Ignore front because it needs a different build arguments 
+      run: GOOS=js GOARCH=wasm GO111MODULE=on go build -v ./...
