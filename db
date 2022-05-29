@@ -1,2 +1,2 @@
 # Connect to development database
-docker exec -it golang-trello_board_db_1 psql --username postgres -d BOARD
+docker exec -it wienerlist_board_db_1 psql --username postgres -d BOARD

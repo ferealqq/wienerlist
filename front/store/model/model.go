@@ -1,11 +1,15 @@
 package model
 
-import "time"
-
 // Item represents a single TODO item in the store.
 type Item struct {
-	Title     string
-	Completed bool
+	ID    uint
+	Title string
+	//TODO Placement?
+	Description string
+	SectionId   uint
+	WorkspaceId uint
+	CreatedAt   string `mapstructure:"created_at"`
+	UpdatedAt   string `mapstructure:"updated_at"`
 }
 
 // FilterState represents a viewing filter for TODO items in the store.
@@ -29,9 +33,9 @@ type Section struct {
 	Description string
 	Placement   int
 	BoardId     uint
-	Items       []interface{}
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Items       []Item
+	CreatedAt   string `mapstructure:"created_at"`
+	UpdatedAt   string `mapstructure:"updated_at"`
 }
 
 type Board struct {

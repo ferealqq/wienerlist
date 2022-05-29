@@ -47,3 +47,4 @@ jobs:
       # Ignore folders vendor and tmp because they don't have anything to test.
       # Ignore front because it needs a different arguments 
       run: go test -v $(ls -d */ | grep -wv 'front\|vendor\|tmp' | sed 's/.*/.\/&.../')
+  

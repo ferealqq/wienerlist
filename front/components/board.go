@@ -1,6 +1,8 @@
 package components
 
 import (
+	"strconv"
+
 	"github.com/ferealqq/wienerlist/front/store"
 
 	"github.com/ferealqq/wienerlist/front/components/bs"
@@ -76,11 +78,43 @@ type sectionItem struct {
 }
 
 func (s *sectionItem) Render() vecty.ComponentOrHTML {
+	var list vecty.List
+	for j := range s.section.Items {
+		list = append(list, &itemComponent{item: &s.section.Items[j]})
+	}
+
 	return elem.Div(
 		vecty.Markup(
 			vecty.Class("col"),
 		),
 
 		vecty.Text(s.section.Title),
+		vecty.If(len(s.section.Items) > 0,
+			list,
+		),
+	)
+}
+
+type itemComponent struct {
+	vecty.Core
+
+	item *model.Item `vecty:"prop"`
+}
+
+func (i *itemComponent) Render() vecty.ComponentOrHTML {
+	id := "item-" + strconv.Itoa(int(i.item.ID))
+	return bs.Accordion(
+		bs.AccordionHeader(
+			bs.AccordionButton(
+				id,
+				vecty.Text(i.item.Title),
+			),
+		),
+		bs.AccordionBody(
+			id,
+			elem.Strong(
+				vecty.Text(i.item.Description),
+			),
+		),
 	)
 }

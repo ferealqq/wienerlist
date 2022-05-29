@@ -30,8 +30,8 @@ type SectionState struct {
 	BoardSections GenDataStore[model.Section]
 }
 
-func NewSectionState() SectionState {
-	return SectionState{
+func NewSectionState() *SectionState {
+	return &SectionState{
 		defState:      defaultState(),
 		BoardSections: make(map[int]map[int]*model.Section),
 	}
@@ -51,8 +51,8 @@ type WorkspaceData struct {
 	Boards map[int]*model.Board
 }
 
-func NewWorkspaceState() WorkspaceState {
-	return WorkspaceState{
+func NewWorkspaceState() *WorkspaceState {
+	return &WorkspaceState{
 		defState:   defaultState(),
 		Workspaces: make(map[int]*WorkspaceData),
 	}

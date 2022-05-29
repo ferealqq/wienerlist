@@ -11,11 +11,9 @@ import (
 var api = services.NewApi("http://localhost:4000/api/v1")
 
 var (
-	// Items represents all of the TODO items in the store.
-	Items []*model.Item
-
 	// Filter represents the active viewing filter for items.
-	Filter         = model.All
+	Filter = model.All
+
 	SectionState   = state.NewSectionState()
 	WorkspaceState = state.NewWorkspaceState()
 )
@@ -28,7 +26,7 @@ func init() {
 }
 
 func FetchBoardSectionsIfNeeded(boardId int) error {
-	if _, ok := SectionState.BoardSections[boardId]; !ok && !SectionState.IsFetching {
+	if _, ok := SectionState.BoardSections[boardId]; !ok && !SectionState.IsFetching && !SectionState.LastActionFailed {
 		dispatcher.Dispatch(&actions.FetchSectionsRequest{})
 		var secs model.ListSections
 		// TODO Create wrapper actions to get section data
@@ -36,7 +34,6 @@ func FetchBoardSectionsIfNeeded(boardId int) error {
 			dispatcher.Dispatch(&actions.FetchSectionsResponseError{Error: err})
 			return err
 		}
-
 		dispatcher.Dispatch(&actions.FetchSectionsResponse{
 			Sections: secs.Sections,
 			BoardId:  boardId,
@@ -48,7 +45,7 @@ func FetchBoardSectionsIfNeeded(boardId int) error {
 }
 
 func FetchWorkspacesIfNeeded() error {
-	if len(WorkspaceState.Workspaces) == 0 && !WorkspaceState.IsFetching {
+	if len(WorkspaceState.Workspaces) == 0 && !WorkspaceState.IsFetching && !WorkspaceState.LastActionFailed {
 		dispatcher.Dispatch(&actions.FetchWorkspacesRequest{})
 		// Render implements the vecty.Component interface.
 		var allWs model.ListWorkspace
@@ -60,26 +57,6 @@ func FetchWorkspacesIfNeeded() error {
 	}
 
 	return nil
-}
-
-// ActiveItemCount returns the current number of items that are not completed.
-func ActiveItemCount() int {
-	return count(false)
-}
-
-// CompletedItemCount returns the current number of items that are completed.
-func CompletedItemCount() int {
-	return count(true)
-}
-
-func count(completed bool) int {
-	count := 0
-	for _, item := range Items {
-		if item.Completed == completed {
-			count++
-		}
-	}
-	return count
 }
 
 func onSectionAction(action interface{}) {
