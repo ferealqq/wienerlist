@@ -1,7 +1,9 @@
 package seeders
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	faker "github.com/bxcodec/faker/v3"
 	"github.com/ferealqq/wienerlist/boardapi/models"
@@ -9,12 +11,23 @@ import (
 	"gorm.io/gorm"
 )
 
+func FakeDate() time.Time {
+	now := time.Now()
+	s := time.Unix(faker.RandomUnixTime(), 0).Format(fmt.Sprintf("%sT%sZ07:00", faker.BaseDateFormat, faker.TimeFormat))
+	t, _ := time.Parse(time.RFC3339, s)
+	d, _ := faker.RandomInt(now.Day()-3, now.Day())
+	m, _ := faker.RandomInt(int(now.Month())-1, int(now.Month()))
+	return time.Date(int(2022), time.Month(m[0]), d[0], t.Hour(), t.Minute(), now.Second(), t.Nanosecond(), t.Location())
+}
+
 func CreateItem(db *gorm.DB, title string, desc string, workspace uint, section uint) *seed.SeedOut[models.Item] {
 	return seed.SeedModel(db, models.Item{
 		Title:       title,
 		Description: desc,
 		WorkspaceId: workspace,
 		SectionId:   section,
+		CreatedAt:   FakeDate(),
+		UpdatedAt:   FakeDate(),
 	})
 }
 
@@ -24,7 +37,7 @@ func CreateItemFaker(db *gorm.DB) *seed.SeedOut[models.Item] {
 	if err := db.First(&workspace).Error; err != nil {
 		workspace = CreateWorkspaceFaker(db).Model
 	}
-
+	faker.Date()
 	return CreateItem(
 		db,
 		faker.Word(),
