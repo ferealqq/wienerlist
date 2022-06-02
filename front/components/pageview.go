@@ -1,13 +1,11 @@
 package components
 
 import (
-	"strconv"
-
 	"github.com/ferealqq/wienerlist/front/components/bs"
 	services "github.com/ferealqq/wienerlist/front/store/services"
+	"github.com/ferealqq/wienerlist/front/util"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
-	router "marwan.io/vecty-router"
 )
 
 var api = services.NewApi("http://localhost:4000/api/v1")
@@ -33,8 +31,8 @@ func (p *PageView) Render() vecty.ComponentOrHTML {
 					vecty.Markup(
 						vecty.Class("col-10"),
 					),
-					router.NewRoute("/", &HomeContainer{}, router.NewRouteOpts{ExactMatch: true}),
-					router.NewRoute("/boards/{id}", new(BoardContainer), router.NewRouteOpts{ExactMatch: true}),
+					util.NewRoute("/", &HomeContainer{}),
+					util.NewRoute("/boards/{id}", new(BoardContainer)),
 				),
 			),
 		),
@@ -46,7 +44,7 @@ type BoardContainer struct {
 }
 
 func (b *BoardContainer) Render() vecty.ComponentOrHTML {
-	id, err := strconv.Atoi(router.GetNamedVar(b)["id"])
+	id, err := util.GetVar(b).GetInt("id")
 	if err != nil {
 		return vecty.Text("Invalid board id")
 	}

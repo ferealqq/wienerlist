@@ -2,10 +2,19 @@ package util
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"syscall/js"
 	"unicode/utf8"
+
+	"github.com/hexops/vecty"
 )
+
+func pathname() string {
+	return js.Global().Get("location").Get("pathname").String()
+}
 
 func search() string {
 	return js.Global().Get("location").Get("search").String()
@@ -15,11 +24,13 @@ func GetSearch() string {
 	return search()
 }
 
+// search param regex
+var searchRe = regexp.MustCompile(`(?m).+\/?\w{1,100}=(\w{1,1000})$`)
 var ErrSearchEmpty = errors.New("location.search didn't contain question mark, nothing to parse")
 var ErrInvalidSearchParam = errors.New("location.search is malformed")
 
 func GetSearchParams() (map[string]string, error) {
-	if s := search(); strings.Contains(s, "?") {
+	if s := search(); searchRe.MatchString(s) {
 		// remove the first character from the string
 		s := trimFirstRune(s)
 		r := make(map[string]string)
@@ -55,27 +66,143 @@ func trimFirstRune(s string) string {
 	return s[i:]
 }
 
-// push state event name
-var eventName = "pushstate"
+func Redirect(route string) {
+	js.Global().Get("history").Call(
+		"pushState",
+		map[string]interface{}{"redirectRoute": route},
+		route,
+		route,
+	)
+	for _, r := range routes {
+		// if route contains search param and current pathname is the same rerender this item
+		// if does not contain slash add a slash
+		if searchRe.MatchString(route) && r.pattern.MatchString(pathname()) && !strings.Contains(route, "/") {
+			println("search param render " + r.path)
+			vecty.Rerender(r.comp)
+		} else if r.pattern.MatchString(route) {
+			println("rerender comp " + r.path)
+			vecty.Rerender(r.comp)
+		} else {
+			println("don't rerender " + r.path)
+		}
+	}
+}
 
-func CreateSearchParamListener(f func()) {
-	// custom js event
-	e := js.Global().Get("document").Call("createEvent", "Event")
-	// initialize event
-	e.Call("initEvent", eventName, true, true)
+type defaultNotFound struct {
+	vecty.Core
+}
 
-	onPushState := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		f()
-		return nil
-	})
+func (d *defaultNotFound) Render() vecty.ComponentOrHTML {
+	return vecty.Text("Path does not exist")
+}
 
-	js.Global().Get("document").Call("addEventListener", eventName, onPushState)
-	// js window.history
-	h := js.Global().Get("window").Get("history")
-	og := h.Get("pushState")
-	pushState := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// for some reason this can't be invoked with the value of object?
-		return og.Invoke(h.Type(), args)
-	})
-	h.Set("pushState", pushState)
+var regexNamedVar = regexp.MustCompile("{[^/]+}")
+
+var notFoundComponent *vecty.Component = new(vecty.Component)
+
+var routes = []*Route{}
+
+type Route struct {
+	vecty.Core
+
+	comp    vecty.Component
+	pattern *regexp.Regexp
+	path    string
+}
+
+func NewRoute(path string, c vecty.Component) *Route {
+	r := &Route{
+		comp: c,
+		path: path,
+	}
+
+	if notFoundComponent == nil {
+		*notFoundComponent = &defaultNotFound{}
+	}
+
+	pattern := path
+
+	pattern = fmt.Sprintf("^%v$", pattern)
+
+	if regexNamedVar.MatchString(path) {
+		pattern = regexNamedVar.ReplaceAllString(path, "([^/]+)")
+	}
+
+	r.pattern = regexp.MustCompile(pattern)
+
+	addRoute(r)
+
+	return r
+}
+
+func NotFoundComponent(c vecty.Component) {
+	*notFoundComponent = c
+}
+
+func addRoute(r *Route) {
+	routes = append(routes, r)
+}
+
+func (r *Route) Render() vecty.ComponentOrHTML {
+	path := pathname()
+	if r.pattern.MatchString(path) {
+		return r.comp
+	}
+	return *notFoundComponent
+}
+
+type VarGetter struct {
+	Path    string
+	Pattern *regexp.Regexp
+}
+
+func (v *VarGetter) All() map[string]string {
+	var vars = make(map[string]string)
+
+	if v == nil {
+		return vars
+	}
+	// extract the named vars from url: "/users/{id}/{dog}" => ["{id}", "{dog}"]
+	namedVars := regexNamedVar.FindAllString(v.Path, -1)
+
+	// remove the surrounding brackets from each named var
+	for i := 0; i < len(namedVars); i++ {
+		namedVars[i] = strings.Replace(
+			strings.Replace(namedVars[i], "{", "", 1),
+			"}",
+			"",
+			1,
+		)
+	}
+
+	namedValues := v.Pattern.FindAllStringSubmatch(pathname(), -1)[0][1:]
+
+	for i := 0; i < len(namedVars); i++ {
+		vars[namedVars[i]] = namedValues[i]
+	}
+
+	return vars
+}
+
+func (v *VarGetter) Get(key string) (string, error) {
+	if s, ok := v.All()[key]; ok {
+		return s, nil
+	}
+	return "", errors.New("named variable not found")
+}
+
+func (v *VarGetter) GetInt(key string) (int, error) {
+	if s, ok := v.All()[key]; ok {
+		return strconv.Atoi(s)
+	}
+	return -1, errors.New("named variable not found")
+}
+
+func GetVar(c vecty.Component) *VarGetter {
+	for i := range routes {
+		if routes[i].comp == c {
+			return &VarGetter{Path: routes[i].path, Pattern: routes[i].pattern}
+		}
+	}
+	return nil
 }

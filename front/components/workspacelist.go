@@ -7,11 +7,11 @@ import (
 	"github.com/ferealqq/wienerlist/front/dispatcher"
 	"github.com/ferealqq/wienerlist/front/store/model"
 	"github.com/ferealqq/wienerlist/front/store/state"
+	"github.com/ferealqq/wienerlist/front/util"
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/hexops/vecty/style"
-	router "marwan.io/vecty-router"
 )
 
 // WorkspaceList is a vecty.Component which represents a single item in the TODO
@@ -139,7 +139,7 @@ func (p *boardItem) Render() vecty.ComponentOrHTML {
 				vecty.Class("btn"),
 				vecty.Class("btn-link"),
 				event.Click(func(_ *vecty.Event) {
-					router.Redirect("/boards/" + strconv.Itoa(int(p.Board.ID)))
+					util.Redirect("/boards/" + strconv.Itoa(int(p.Board.ID)))
 				}),
 			),
 			vecty.Text(p.Board.Title),

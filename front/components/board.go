@@ -1,11 +1,12 @@
 package components
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
 	"github.com/ferealqq/wienerlist/front/store"
-	router "marwan.io/vecty-router"
+	"github.com/ferealqq/wienerlist/front/util"
 
 	"github.com/ferealqq/wienerlist/front/components/bs"
 	u "github.com/ferealqq/wienerlist/front/components/util"
@@ -43,9 +44,9 @@ func (b *BoardComponent) SkipRender(prev v.Component) bool {
 	if rs, ok := prev.(v.Keyer); ok {
 		// if the index changes we need to fetch all the sections for this board
 		if rs.Key() != b.Index {
-			store.SectionState.Listeners.Remove(b)
 			store.SectionState.Listeners.Add(b, func() {
 				b.secs = store.SectionState.BoardSections[b.Index]
+				store.SectionState.Listeners.Remove(b)
 				v.Rerender(b)
 			})
 			b.secs = store.SectionState.BoardSections[b.Index]
@@ -63,6 +64,11 @@ func (b *BoardComponent) Render() v.ComponentOrHTML {
 		secs = append(secs, &sectionItem{section: sec})
 	}
 
+	itemId, err := util.GetSearchParam("itemId")
+	if errors.Is(err, util.ErrInvalidSearchParam) {
+		return v.Text("Invalid search pattern")
+	}
+
 	return bs.ContainerFluid(
 		bs.Row(
 			v.Markup(
@@ -72,9 +78,8 @@ func (b *BoardComponent) Render() v.ComponentOrHTML {
 			v.If(len(b.secs) > 0,
 				secs,
 			),
+			v.If(itemId != "", vecty.Text("show item!!!!!")),
 		),
-		// TODO Fix this
-		// router.NewRoute("/item/{itemId}", new(Test), router.NewRouteOpts{ExactMatch: true}),
 	)
 }
 
@@ -173,7 +178,7 @@ func (i *itemComponent) Render() v.ComponentOrHTML {
 	return bs.ListItem(
 		v.Markup(
 			event.Click(func(_ *vecty.Event) {
-				router.Redirect("/boards/1/item/" + strconv.Itoa(int(i.item.ID)))
+				util.Redirect("?itemId=" + strconv.Itoa(int(i.item.ID)))
 			}),
 			event.MouseEnter(func(_ *v.Event) {
 				i.toggle = !i.toggle

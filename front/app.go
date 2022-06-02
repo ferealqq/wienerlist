@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"syscall/js"
 
 	"github.com/ferealqq/wienerlist/front/components"
-	"github.com/ferealqq/wienerlist/front/util"
 	"github.com/hexops/vecty"
 )
 
