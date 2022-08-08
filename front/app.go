@@ -10,9 +10,8 @@ import (
 func main() {
 	// Move bootstrap to custom wasmserve so that you can also include bootstrap javascript etc
 	vecty.AddStylesheet("https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css")
-	AddScript(
-		"https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js",
-	)
+	vecty.AddStylesheet("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css")
+	AddScript("https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js")
 	vecty.AddStylesheet("app.css")
 
 	vecty.SetTitle("Wienerlist • Wiener boards!")
