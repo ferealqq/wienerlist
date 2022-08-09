@@ -78,10 +78,9 @@ func Redirect(route string) {
 		// if does not contain slash add a slash
 		if searchRe.MatchString(route) && r.pattern.MatchString(pathname()) && !strings.Contains(route, "/") {
 			println("search param render " + r.path)
-			vecty.Rerender(r.comp)
+			vecty.Rerender(r)
 		} else if r.pattern.MatchString(route) {
-			println("rerender comp " + r.path)
-			vecty.Rerender(r.comp)
+			vecty.Rerender(r)
 		} else {
 			println("don't rerender " + r.path)
 		}
