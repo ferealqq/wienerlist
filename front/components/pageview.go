@@ -32,6 +32,7 @@ func (p *PageView) Render() vecty.ComponentOrHTML {
 						vecty.Class("col-10"),
 					),
 					util.NewRoute("/", &HomeContainer{}),
+					util.NewRoute("/boards/{id}/item/{itemId}", new(ItemModal)),
 					util.NewRoute("/boards/{id}", new(BoardContainer)),
 				),
 			),
@@ -44,7 +45,7 @@ type BoardContainer struct {
 }
 
 func (b *BoardContainer) Render() vecty.ComponentOrHTML {
-	id, err := util.GetVar(b).GetInt("id")
+	id, err := util.GetIntVar("id")
 	if err != nil {
 		return vecty.Text("Invalid board id")
 	}

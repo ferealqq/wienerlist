@@ -178,7 +178,11 @@ func (i *itemComponent) Render() v.ComponentOrHTML {
 	return bs.ListItem(
 		v.Markup(
 			event.Click(func(_ *vecty.Event) {
-				util.Redirect("?itemId=" + strconv.Itoa(int(i.item.ID)))
+				if v, err := util.GetVar("id"); err == nil {
+					util.Redirect("/boards/" + v + "/item/" + strconv.Itoa(int(i.item.ID)))
+				} else {
+					panic(err)
+				}
 			}),
 			event.MouseEnter(func(_ *v.Event) {
 				i.toggle = !i.toggle

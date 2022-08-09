@@ -16,6 +16,11 @@ func pathname() string {
 	return js.Global().Get("location").Get("pathname").String()
 }
 
+// FIXME delete pathname function rename it to this
+func LocationPathname() string {
+	return pathname()
+}
+
 func search() string {
 	return js.Global().Get("location").Get("search").String()
 }
@@ -66,6 +71,26 @@ func trimFirstRune(s string) string {
 	return s[i:]
 }
 
+func RerenderRoute(route string) {
+	for _, r := range routes {
+		// this would probably be better if it would use strict match
+		if r.pattern.MatchString(route) {
+			vecty.Rerender(r)
+			return
+		}
+	}
+}
+
+// back to the previous url
+func Back() {
+	println("before " + pathname())
+	js.Global().Get("history").Call(
+		"go",
+		"-1",
+	)
+	RerenderRoute(pathname())
+}
+
 func Redirect(route string) {
 	js.Global().Get("history").Call(
 		"pushState",
@@ -73,18 +98,7 @@ func Redirect(route string) {
 		route,
 		route,
 	)
-	for _, r := range routes {
-		// if route contains search param and current pathname is the same rerender this item
-		// if does not contain slash add a slash
-		if searchRe.MatchString(route) && r.pattern.MatchString(pathname()) && !strings.Contains(route, "/") {
-			println("search param render " + r.path)
-			vecty.Rerender(r)
-		} else if r.pattern.MatchString(route) {
-			vecty.Rerender(r)
-		} else {
-			println("don't rerender " + r.path)
-		}
-	}
+	RerenderRoute(route)
 }
 
 type defaultNotFound struct {
@@ -197,7 +211,35 @@ func (v *VarGetter) GetInt(key string) (int, error) {
 	return -1, errors.New("named variable not found")
 }
 
-func GetVar(c vecty.Component) *VarGetter {
+func GetVar(name string) (string, error) {
+	for _, r := range routes {
+		if r.pattern.MatchString(pathname()) {
+			g := VarGetter{
+				Path:    r.path,
+				Pattern: r.pattern,
+			}
+
+			return g.Get(name)
+		}
+	}
+	return "", errors.New("no url value found")
+}
+
+func GetIntVar(name string) (int, error) {
+	for _, r := range routes {
+		if r.pattern.MatchString(pathname()) {
+			g := VarGetter{
+				Path:    r.path,
+				Pattern: r.pattern,
+			}
+
+			return g.GetInt(name)
+		}
+	}
+	return 0, errors.New("no url value found")
+}
+
+func GetVarComp(c vecty.Component) *VarGetter {
 	for i := range routes {
 		if routes[i].comp == c {
 			return &VarGetter{Path: routes[i].path, Pattern: routes[i].pattern}
