@@ -1,8 +1,11 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/ferealqq/wienerlist/front/components/bs"
 	i "github.com/ferealqq/wienerlist/front/components/input"
+	u "github.com/ferealqq/wienerlist/front/components/util"
 	"github.com/ferealqq/wienerlist/front/util"
 	v "github.com/hexops/vecty"
 	e "github.com/hexops/vecty/elem"
@@ -14,10 +17,10 @@ type ItemModal struct {
 }
 
 func (b *ItemModal) Render() v.ComponentOrHTML {
-	// id, err := util.GetIntVar("id")
-	// if err != nil {
-	// 	return v.Text("Invalid board id")
-	// }
+	id, err := util.GetIntVar("id")
+	if err != nil {
+		return v.Text("Invalid board id")
+	}
 	// itemId, err := util.GetIntVar("itemId")
 	// if err != nil {
 	// 	return v.Text("Invalid item id")
@@ -25,16 +28,29 @@ func (b *ItemModal) Render() v.ComponentOrHTML {
 	return bs.FModal(
 		[]v.MarkupOrChild{e.Heading3(v.Text("Item"))},
 		[]v.MarkupOrChild{
-			i.HoverTextInput(v.Markup(v.Attribute("value", "Otsikko"), v.Attribute("id", "title"))),
-			i.HoverTextAreaInput(v.Markup(v.Attribute("value", "Leipäteksti"), v.Attribute("id", "description"))),
+			i.HoverTextInput(
+				v.Markup(
+					v.Attribute("value", "Otsikko"),
+					v.Attribute("id", "title"),
+				),
+			),
+			i.HoverTextAreaInput(
+				v.Markup(
+					v.Attribute("id", "description"),
+				),
+				v.Text("leipätekstiä komponenttiin"),
+			),
 		},
 		[]v.MarkupOrChild{
-			bs.Button2ry(v.Text("Close"), v.Markup(
-				evt.Click(func(e *v.Event) {
-					util.Back()
-				}),
-			)),
-			bs.ButtonPry(v.Text("Save changes")),
+			e.Div(
+				u.Classes("justify-content-between", "d-flex", "w-100"),
+				bs.Button2ry(v.Text("Close"), v.Markup(
+					evt.Click(func(e *v.Event) {
+						util.Redirect(fmt.Sprintf("/boards/%d", id))
+					}),
+				)),
+				bs.ButtonPry(v.Text("Save changes")),
+			),
 		},
 		v.Markup(
 			v.Class("fade"),
