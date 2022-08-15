@@ -138,7 +138,15 @@ func NewRoute(path string, c vecty.Component) *Route {
 	pattern = fmt.Sprintf("^%v$", pattern)
 
 	if regexNamedVar.MatchString(path) {
-		pattern = regexNamedVar.ReplaceAllString(path, "([^/]+)")
+		// pattern = regexNamedVar.ReplaceAllString(path, "([^/]+)")
+		a := regexNamedVar.FindAllString(path, -1)
+		for i, v := range a {
+			if i+1 == len(a) {
+				pattern = strings.Replace(pattern, v, "([^/]+)$", 1)
+			} else {
+				pattern = strings.Replace(pattern, v, "([^/]+)", 1)
+			}
+		}
 	}
 
 	r.pattern = regexp.MustCompile(pattern)
