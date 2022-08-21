@@ -72,11 +72,15 @@ func trimFirstRune(s string) string {
 }
 
 func RerenderRoute(route string) {
+	// first we need to rerender current route so that it wont be displayed then we need to rerender the route that the user is trying to use
+	if currentRouteState != nil {
+		vecty.Rerender(currentRouteState)
+	}
+
 	for _, r := range routes {
 		// this would probably be better if it would use strict match
 		if r.pattern.MatchString(route) {
 			vecty.Rerender(r)
-			return
 		}
 	}
 }
@@ -109,6 +113,8 @@ func (d *defaultNotFound) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Path does not exist")
 }
 
+var currentRouteState *Route
+
 var regexNamedVar = regexp.MustCompile("{[^/]+}")
 
 var notFoundComponent *vecty.Component = new(vecty.Component)
@@ -118,9 +124,10 @@ var routes = []*Route{}
 type Route struct {
 	vecty.Core
 
-	comp    vecty.Component
-	pattern *regexp.Regexp
-	path    string
+	comp          vecty.Component
+	pattern       *regexp.Regexp
+	strictPattern *regexp.Regexp
+	path          string
 }
 
 func NewRoute(path string, c vecty.Component) *Route {
@@ -134,22 +141,25 @@ func NewRoute(path string, c vecty.Component) *Route {
 	}
 
 	pattern := path
+	strictPattern := path
 
 	pattern = fmt.Sprintf("^%v$", pattern)
+	strictPattern = fmt.Sprintf("^%v$", strictPattern)
 
 	if regexNamedVar.MatchString(path) {
-		// pattern = regexNamedVar.ReplaceAllString(path, "([^/]+)")
+		pattern = regexNamedVar.ReplaceAllString(path, "([^/]+)")
 		a := regexNamedVar.FindAllString(path, -1)
 		for i, v := range a {
 			if i+1 == len(a) {
-				pattern = strings.Replace(pattern, v, "([^/]+)$", 1)
+				strictPattern = strings.Replace(strictPattern, v, "([^/]+)$", 1)
 			} else {
-				pattern = strings.Replace(pattern, v, "([^/]+)", 1)
+				strictPattern = strings.Replace(strictPattern, v, "([^/]+)", 1)
 			}
 		}
 	}
 
 	r.pattern = regexp.MustCompile(pattern)
+	r.strictPattern = regexp.MustCompile(strictPattern)
 
 	addRoute(r)
 
@@ -167,6 +177,10 @@ func addRoute(r *Route) {
 func (r *Route) Render() vecty.ComponentOrHTML {
 	path := pathname()
 	if r.pattern.MatchString(path) {
+		// this should be set only when using strict
+		if r.strictPattern.MatchString(path) {
+			currentRouteState = r
+		}
 		return r.comp
 	}
 	return *notFoundComponent
