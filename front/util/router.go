@@ -16,6 +16,11 @@ func pathname() string {
 	return js.Global().Get("location").Get("pathname").String()
 }
 
+// FIXME delete pathname function rename it to this
+func LocationPathname() string {
+	return pathname()
+}
+
 func search() string {
 	return js.Global().Get("location").Get("search").String()
 }
@@ -66,6 +71,30 @@ func trimFirstRune(s string) string {
 	return s[i:]
 }
 
+func RerenderRoute(route string) {
+	// first we need to rerender current route so that it wont be displayed then we need to rerender the route that the user is trying to use
+	if currentRouteState != nil {
+		vecty.Rerender(currentRouteState)
+	}
+
+	for _, r := range routes {
+		// this would probably be better if it would use strict match
+		if r.pattern.MatchString(route) {
+			vecty.Rerender(r)
+		}
+	}
+}
+
+// back to the previous url
+func Back() {
+	println("before " + pathname())
+	js.Global().Get("history").Call(
+		"go",
+		"-1",
+	)
+	RerenderRoute(pathname())
+}
+
 func Redirect(route string) {
 	js.Global().Get("history").Call(
 		"pushState",
@@ -73,19 +102,7 @@ func Redirect(route string) {
 		route,
 		route,
 	)
-	for _, r := range routes {
-		// if route contains search param and current pathname is the same rerender this item
-		// if does not contain slash add a slash
-		if searchRe.MatchString(route) && r.pattern.MatchString(pathname()) && !strings.Contains(route, "/") {
-			println("search param render " + r.path)
-			vecty.Rerender(r.comp)
-		} else if r.pattern.MatchString(route) {
-			println("rerender comp " + r.path)
-			vecty.Rerender(r.comp)
-		} else {
-			println("don't rerender " + r.path)
-		}
-	}
+	RerenderRoute(route)
 }
 
 type defaultNotFound struct {
@@ -96,6 +113,8 @@ func (d *defaultNotFound) Render() vecty.ComponentOrHTML {
 	return vecty.Text("Path does not exist")
 }
 
+var currentRouteState *Route
+
 var regexNamedVar = regexp.MustCompile("{[^/]+}")
 
 var notFoundComponent *vecty.Component = new(vecty.Component)
@@ -105,9 +124,10 @@ var routes = []*Route{}
 type Route struct {
 	vecty.Core
 
-	comp    vecty.Component
-	pattern *regexp.Regexp
-	path    string
+	comp          vecty.Component
+	pattern       *regexp.Regexp
+	strictPattern *regexp.Regexp
+	path          string
 }
 
 func NewRoute(path string, c vecty.Component) *Route {
@@ -121,14 +141,25 @@ func NewRoute(path string, c vecty.Component) *Route {
 	}
 
 	pattern := path
+	strictPattern := path
 
 	pattern = fmt.Sprintf("^%v$", pattern)
+	strictPattern = fmt.Sprintf("^%v$", strictPattern)
 
 	if regexNamedVar.MatchString(path) {
 		pattern = regexNamedVar.ReplaceAllString(path, "([^/]+)")
+		a := regexNamedVar.FindAllString(path, -1)
+		for i, v := range a {
+			if i+1 == len(a) {
+				strictPattern = strings.Replace(strictPattern, v, "([^/]+)$", 1)
+			} else {
+				strictPattern = strings.Replace(strictPattern, v, "([^/]+)", 1)
+			}
+		}
 	}
 
 	r.pattern = regexp.MustCompile(pattern)
+	r.strictPattern = regexp.MustCompile(strictPattern)
 
 	addRoute(r)
 
@@ -146,6 +177,10 @@ func addRoute(r *Route) {
 func (r *Route) Render() vecty.ComponentOrHTML {
 	path := pathname()
 	if r.pattern.MatchString(path) {
+		// this should be set only when using strict
+		if r.strictPattern.MatchString(path) {
+			currentRouteState = r
+		}
 		return r.comp
 	}
 	return *notFoundComponent
@@ -198,7 +233,35 @@ func (v *VarGetter) GetInt(key string) (int, error) {
 	return -1, errors.New("named variable not found")
 }
 
-func GetVar(c vecty.Component) *VarGetter {
+func GetVar(name string) (string, error) {
+	for _, r := range routes {
+		if r.pattern.MatchString(pathname()) {
+			g := VarGetter{
+				Path:    r.path,
+				Pattern: r.pattern,
+			}
+
+			return g.Get(name)
+		}
+	}
+	return "", errors.New("no url value found")
+}
+
+func GetIntVar(name string) (int, error) {
+	for _, r := range routes {
+		if r.pattern.MatchString(pathname()) {
+			g := VarGetter{
+				Path:    r.path,
+				Pattern: r.pattern,
+			}
+
+			return g.GetInt(name)
+		}
+	}
+	return 0, errors.New("no url value found")
+}
+
+func GetVarComp(c vecty.Component) *VarGetter {
 	for i := range routes {
 		if routes[i].comp == c {
 			return &VarGetter{Path: routes[i].path, Pattern: routes[i].pattern}

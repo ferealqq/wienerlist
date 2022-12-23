@@ -12,7 +12,7 @@ func main() {
 	vecty.AddStylesheet("https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css")
 	vecty.AddStylesheet("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css")
 	AddScript("https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js")
-	vecty.AddStylesheet("app.css")
+	vecty.AddStylesheet(cssPath("app.css"))
 
 	vecty.SetTitle("Wienerlist • Wiener boards!")
 	p := &components.PageView{}
@@ -23,4 +23,8 @@ func AddScript(url string) {
 	script := js.Global().Get("document").Call("createElement", "script")
 	script.Set("src", url)
 	js.Global().Get("document").Get("head").Call("appendChild", script)
+}
+
+func cssPath(f string) string {
+	return js.Global().Get("window").Get("location").Get("origin").String() + "/" + f
 }

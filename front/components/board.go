@@ -44,9 +44,9 @@ func (b *BoardComponent) SkipRender(prev v.Component) bool {
 	if rs, ok := prev.(v.Keyer); ok {
 		// if the index changes we need to fetch all the sections for this board
 		if rs.Key() != b.Index {
+			store.SectionState.Listeners.Remove(b)
 			store.SectionState.Listeners.Add(b, func() {
 				b.secs = store.SectionState.BoardSections[b.Index]
-				store.SectionState.Listeners.Remove(b)
 				v.Rerender(b)
 			})
 			b.secs = store.SectionState.BoardSections[b.Index]
@@ -61,14 +61,13 @@ func (b *BoardComponent) Render() v.ComponentOrHTML {
 
 	var secs v.List
 	for _, sec := range b.secs {
-		secs = append(secs, &sectionItem{section: sec})
+		secs = append(secs, &SectionItem{Section: sec})
 	}
 
 	itemId, err := util.GetSearchParam("itemId")
 	if errors.Is(err, util.ErrInvalidSearchParam) {
 		return v.Text("Invalid search pattern")
 	}
-
 	return bs.ContainerFluid(
 		bs.Row(
 			v.Markup(
@@ -83,16 +82,16 @@ func (b *BoardComponent) Render() v.ComponentOrHTML {
 	)
 }
 
-type sectionItem struct {
+type SectionItem struct {
 	v.Core
 
-	section *model.Section `vecty:"prop"`
+	Section *model.Section `vecty:"prop"`
 }
 
-func (s *sectionItem) Render() v.ComponentOrHTML {
+func (s *SectionItem) Render() v.ComponentOrHTML {
 	var list v.List
-	for j := range s.section.Items {
-		list = append(list, &itemComponent{item: &s.section.Items[j]})
+	for j := range s.Section.Items {
+		list = append(list, &ItemComponent{Item: &s.Section.Items[j]})
 	}
 
 	return e.Div(
@@ -100,8 +99,8 @@ func (s *sectionItem) Render() v.ComponentOrHTML {
 			v.Class("col"),
 		),
 
-		v.Text(s.section.Title),
-		v.If(len(s.section.Items) > 0,
+		v.Text(s.Section.Title),
+		v.If(len(s.Section.Items) > 0,
 			bs.List(
 				list,
 			),
@@ -109,13 +108,13 @@ func (s *sectionItem) Render() v.ComponentOrHTML {
 	)
 }
 
-type itemComponent struct {
+type ItemComponent struct {
 	v.Core
-	item   *model.Item `vecty:"prop"`
-	toggle bool
+	Item   *model.Item `vecty:"prop"`
+	Toggle bool
 
-	created string
-	updated string
+	Created string
+	Updated string
 }
 
 const (
@@ -170,26 +169,30 @@ func since(s string) string {
 	}
 }
 
-func (i *itemComponent) Render() v.ComponentOrHTML {
-	id := "item-" + strconv.Itoa(int(i.item.ID))
-	i.created = since(i.item.CreatedAt)
-	i.updated = since(i.item.UpdatedAt)
-	// i.toggle = true
+func (i *ItemComponent) Render() v.ComponentOrHTML {
+	id := "item-" + strconv.Itoa(int(i.Item.ID))
+	i.Created = since(i.Item.CreatedAt)
+	i.Updated = since(i.Item.UpdatedAt)
+	// i.Toggle = true
 	return bs.ListItem(
 		v.Markup(
 			event.Click(func(_ *vecty.Event) {
-				util.Redirect("?itemId=" + strconv.Itoa(int(i.item.ID)))
+				if v, err := util.GetVar("id"); err == nil {
+					util.Redirect("/boards/" + v + "/item/" + strconv.Itoa(int(i.Item.ID)))
+				} else {
+					panic(err)
+				}
 			}),
 			event.MouseEnter(func(_ *v.Event) {
-				i.toggle = !i.toggle
+				i.Toggle = !i.Toggle
 				v.Rerender(i)
 			}),
 			event.MouseLeave(func(_ *v.Event) {
-				i.toggle = !i.toggle
+				i.Toggle = !i.Toggle
 				v.Rerender(i)
 			}),
 		),
-		bs.Active(i.toggle),
+		bs.Active(i.Toggle),
 		e.Div(
 			u.Classes(
 				"d-flex",
@@ -199,29 +202,29 @@ func (i *itemComponent) Render() v.ComponentOrHTML {
 			u.Atr("id", id),
 			e.Heading5(
 				u.Classes("mb-1"),
-				v.Text(i.item.Title),
+				v.Text(i.Item.Title),
 			),
 			v.If(
-				!i.toggle,
-				e.Small(v.Text(i.created)),
+				!i.Toggle,
+				e.Small(v.Text(i.Created)),
 			),
 			v.If(
-				i.toggle,
+				i.Toggle,
 				bs.Icon("github"),
 			),
 		),
-		v.If(i.toggle,
+		v.If(i.Toggle,
 			e.Div(
 				u.Classes("col", "pt-1", "d-flex", "justify-content-between"),
 				e.Paragraph(
 					u.Classes("small", "my-auto"),
 					bs.Icon("calendar2-fill", u.Classes("pe-1")),
-					vecty.Text(i.created),
+					vecty.Text(i.Created),
 				),
 				e.Paragraph(
 					u.Classes("small", "my-auto"),
 					bs.Icon("calendar2-plus-fill", u.Classes("pe-1")),
-					vecty.Text(i.updated),
+					vecty.Text(i.Updated),
 				),
 			),
 		),
